@@ -16,7 +16,19 @@ namespace Backup
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            //Application.Run(new Form1());
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // Show the system tray icon.
+            using (ProcessIcon pi = new ProcessIcon())
+            {
+                pi.Display();
+
+                // Make sure the application runs!
+                Application.Run();
+            }
         }
     }
 }

@@ -11,26 +11,36 @@ namespace Backup.Test
     public class FileTest
     {
         [TestMethod]
-        public void GetFiles()
+        public void Process()
         {
             var path = @"C:\Users\Rob\source\repos\Backup\Backup.Test";
-            var fromDate = DateTime.Now;
-            var pattern = "*.*";
 
-            var files = FileManager.GetChangedFiles(path, pattern, fromDate);
-
-            files.ForEach(f => Console.WriteLine(f.FilePath));
-        }
-
-        [TestMethod]
-        public void CreateControlFiles()
-        {
-            var path = ConfigurationManager.AppSettings[FileManager.SettingsKey];
+            // Create control files
             FileManager.Initialise(path);
+
+            // Get files changed since fromDate
+            var sources = new List<Source>() { new Source(path, "*.*") };
+            FileManager.DiscoverFiles(path, sources, DateTime.Now);
+            //files.ForEach(f => Console.WriteLine(f.FilePath));
+
+            //FileManager.AppendFiles(path, files);
+
+            // Iterate list and copy while updating status of file in list
+            var archive = ConfigurationManager.AppSettings[FileManager.ArchiveDirKey];
+            FileManager.Process(path, archive);
+
+            // When complete remove processing file and disco files
+
         }
 
         [TestMethod]
-        public void CreateTargetsFile()
+        public void Config()
+        {
+            FileManager.Initialise(ConfigurationManager.AppSettings[FileManager.SettingsKey]);
+        }
+
+        [TestMethod]
+        public void Test()
         {
         }
     }

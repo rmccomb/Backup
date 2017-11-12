@@ -33,6 +33,9 @@ namespace Backup
             }
         }
 
+        /// <summary>
+        /// Create the control files if not extant
+        /// </summary>
         private static void Initialise()
         {
             try

@@ -1,5 +1,5 @@
 ﻿STI commands
-- discovery now (finds new files), presents list option to select and backup
+- discover now (finds new files), presents list option to select and backup
 - update sources list (directories+patterns to scan)
 - restore from backup
 - configure - archive folder, AWS account+secret (encrypted)

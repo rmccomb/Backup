@@ -8,8 +8,11 @@ namespace Backup.Logic
 {
     public class Source
     {
-        public string Directory;
-        public string Pattern;
+        private string directory;
+        private string pattern;
+
+        public string Directory { get => directory; set => directory = value; }
+        public string Pattern { get => pattern; set => pattern = value; }
 
         public Source(string path, string pattern)
         {

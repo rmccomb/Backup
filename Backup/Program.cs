@@ -23,6 +23,7 @@ namespace Backup
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
             Initialise();
 
             // Show the system tray icon.
@@ -34,27 +35,26 @@ namespace Backup
         }
 
         /// <summary>
-        /// Create the control files if not extant
+        /// Create the folder for temp files
         /// </summary>
         private static void Initialise()
         {
             try
             {
-                var path = ConfigurationManager.AppSettings[FileManager.SettingsKey];
-                if (string.IsNullOrEmpty(path))
+                var tempDir = ConfigurationManager.AppSettings[FileManager.TempDirKey];
+                if (string.IsNullOrEmpty(tempDir))
                 {
-                    path = Directory.GetParent(
+                    tempDir = Directory.GetParent(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
                     if (Environment.OSVersion.Version.Major >= 6)
                     {
-                        path = Directory.GetParent(path).ToString();
+                        tempDir = Directory.GetParent(tempDir).ToString();
                     }
 
-                    path = Path.Combine(path, FileManager.SettingsFolder);
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
+                    tempDir = Path.Combine(tempDir, FileManager.SettingsFolder);
+                    if (!Directory.Exists(tempDir))
+                        Directory.CreateDirectory(tempDir);
                 }
-                FileManager.Initialise(path);
             }
             catch (Exception ex)
             {

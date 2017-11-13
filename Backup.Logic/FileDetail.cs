@@ -5,10 +5,19 @@ namespace Backup.Logic
 {
     public class FileDetail
     {
+        /// <summary>
+        /// The path to the file to backup
+        /// </summary>
         public string FilePath { get; internal set; }
 
+        /// <summary>
+        /// The highest directory which is a source for backup
+        /// </summary>
         public string Root { get; internal set; }
 
+        /// <summary>
+        /// The part of the path to copy
+        /// </summary>
         public string SubPath
         {
             get

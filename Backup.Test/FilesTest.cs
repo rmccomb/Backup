@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Backup.Logic;
 using System.Configuration;
+using System.Diagnostics;
 
 namespace Backup.Test
 {
@@ -13,35 +14,38 @@ namespace Backup.Test
         [TestMethod]
         public void Process()
         {
-            var path = @"C:\Users\Rob\source\repos\Backup\Backup.Test";
-
-            // Create control files
-            FileManager.Initialise(path);
+            var path = ConfigurationManager.AppSettings[FileManager.TempDirKey];
 
             // Get files changed since fromDate
-            var sources = new List<Source>() { new Source(path, "*.*") };
-            FileManager.DiscoverFiles(path, sources, DateTime.Now);
-            //files.ForEach(f => Console.WriteLine(f.FilePath));
+            var sources = FileManager.GetSources(path);
 
-            //FileManager.AppendFiles(path, files);
+            // Dummy sources
+            if (sources.Count == 0)
+                sources.Add(new Source(@"C:\Users\Rob\source\repos\Backup\Backup.Test\test files", "*.*"));
 
-            // Iterate list and copy while updating status of file in list
+            var lastDate = FileManager.GetLastDate(path);
+            FileManager.DiscoverFiles(path, sources, lastDate);
+
+            // Iterate discovered files and copy while updating status of file in list
             var archive = ConfigurationManager.AppSettings[FileManager.ArchiveDirKey];
             FileManager.Process(path, archive);
 
-            // When complete remove processing file and disco files
 
         }
 
         [TestMethod]
         public void Config()
         {
-            FileManager.Initialise(ConfigurationManager.AppSettings[FileManager.SettingsKey]);
+            FileManager.GetSources(ConfigurationManager.AppSettings[FileManager.TempDirKey]);
+            Debug.WriteLine(FileManager.GetLastDate(ConfigurationManager.AppSettings[FileManager.TempDirKey]));
         }
 
         [TestMethod]
-        public void Test()
+        public void GetSources()
         {
+            var path = @"C:\Users\Rob\source\repos\Backup\Backup.Test";
+            var sources = FileManager.GetSources(path);
+            sources.ForEach(s => Debug.WriteLine($"{s.Directory}, {s.Pattern}"));
         }
     }
 }

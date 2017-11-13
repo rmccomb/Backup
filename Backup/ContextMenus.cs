@@ -5,64 +5,79 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Backup.Properties;
+using Backup.Logic;
+using System.Configuration;
 
 namespace Backup
 {
     class ContextMenus
     {
-        bool isAboutLoaded = false;
-
         public ContextMenuStrip Create()
         {
-            // Add the default menu options.
             ContextMenuStrip menu = new ContextMenuStrip();
-            ToolStripMenuItem item;
-            ToolStripSeparator sep;
 
-            // Windows Explorer.
-            item = new ToolStripMenuItem();
-            item.Text = "Explorer";
-            item.Click += new EventHandler(Explorer_Click);
-            item.Image = Resources.Explorer;
+            var item = new ToolStripMenuItem();
+            item.Text = "Discover files";
+            item.Click += new EventHandler(Discover_Click);
+            item.Image = Resources.Discover;
             menu.Items.Add(item);
 
-            // About.
-            item = new ToolStripMenuItem();
-            item.Text = "About";
-            item.Click += new EventHandler(About_Click);
-            item.Image = Resources.About;
-            menu.Items.Add(item);
+            var backup = new ToolStripMenuItem();
+            backup.Text = "Backup now";
+            backup.Click += new EventHandler(Backup_Click);
+            backup.Image = Resources.Backup;
+            menu.Items.Add(backup);
 
-            // Separator.
-            sep = new ToolStripSeparator();
+            var configure = new ToolStripMenuItem();
+            configure.Text = "Configure";
+            configure.Click += new EventHandler(Configure_Click);
+            menu.Items.Add(configure);
+
+            var restore = new ToolStripMenuItem();
+            restore.Text = "Restore";
+            restore.Click += new EventHandler(Restore_Click);
+            menu.Items.Add(restore);
+
+            var sep = new ToolStripSeparator();
             menu.Items.Add(sep);
 
-            // Exit.
-            item = new ToolStripMenuItem();
-            item.Text = "Exit";
-            item.Click += new System.EventHandler(Exit_Click);
-            item.Image = Resources.Exit;
-            menu.Items.Add(item);
+            var exit = new ToolStripMenuItem();
+            exit.Text = "Exit";
+            exit.Click += new System.EventHandler(Exit_Click);
+            menu.Items.Add(exit);
 
             return menu;
         }
 
-        void Explorer_Click(object sender, EventArgs e)
+        private void Restore_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("explorer", null);
+            throw new NotImplementedException();
         }
 
-        void About_Click(object sender, EventArgs e)
+        private void Configure_Click(object sender, EventArgs e)
         {
-            if (!isAboutLoaded)
-            {
-                isAboutLoaded = true;
-                new About().ShowDialog();
-                isAboutLoaded = false;
-            }
+            var form = new ConfigureForm();
+            form.ShowDialog();
         }
 
-        void Exit_Click(object sender, EventArgs e)
+        private void Backup_Click(object sender, EventArgs e)
+        {
+            var tempDir = ConfigurationManager.AppSettings[FileManager.TempDirKey];
+            var archive = ConfigurationManager.AppSettings[FileManager.ArchiveDirKey];
+            FileManager.Process(tempDir, archive);
+        }
+
+        private void Discover_Click(object sender, EventArgs e)
+        {
+            var tempDir = ConfigurationManager.AppSettings[FileManager.TempDirKey];
+            var sources = FileManager.GetSources(tempDir);
+            var lastDate = FileManager.GetLastDate(tempDir);
+            FileManager.DiscoverFiles(tempDir, sources, lastDate);
+
+
+        }
+
+        private void Exit_Click(object sender, EventArgs e)
         {
             // Quit without further ado.
             Application.Exit();

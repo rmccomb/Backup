@@ -8,22 +8,48 @@ using System.Threading.Tasks;
 
 namespace Backup.Logic
 {
-    public class FileManager
+    public static class FileManager
     {
         // The name of the setting folder
         public const string SettingsFolder = ".bbackup";
 
         // The configurable location of where the settings for the application live
-        public const string SettingsKey = "settings";
-        public const string ArchiveDirKey = "archive";
+        public const string TempDirKey = "tempDir";
+        public const string ArchiveDirKey = "archiveDir";
 
         // Files capturing the status of the files
         public const string DiscoName = "bbackup.disco.dat";
+
+        /// <summary>
+        /// Get the date of the last backup from file
+        /// </summary>
+        public static DateTime GetLastDate(string tempDir)
+        {
+            if (!File.Exists(Path.Combine(tempDir, LastDateName)))
+                return DateTime.MinValue;
+
+            using (var reader = File.OpenText(Path.Combine(tempDir, LastDateName)))
+            {
+                var line = reader.ReadLine();
+                return DateTime.Parse(line);
+            }
+        }
+
         public const string ProcessingName = "bbackup.processing.dat";
         public const string CatalogName = "bbackup.catalog.dat";
+        public const string LastDateName = "bbackup.last.dat";
 
         // The list of target directories
         public const string SourcesName = "bbackup.sources.dat";
+
+        static public List<Source> GetSources(string tempDir)
+        {
+            CreateSourcesFile(tempDir);
+
+            var lines = File.ReadAllLines(Path.Combine(tempDir, SourcesName));
+            return new List<Source>(
+                (from l in lines select new Source(l.Split(',')[0].Trim(), l.Split(',')[1].Trim())).Skip(1));
+        }
 
         /// <summary>
         /// Scan for files to backup
@@ -43,19 +69,25 @@ namespace Backup.Logic
             foreach (var file in files)
             {
                 var lastWrite = File.GetLastWriteTimeUtc(file);
-                if (lastWrite < fromDate)
+                if (fromDate < lastWrite)
                     changed.Add(new FileDetail { FilePath = file, Root = directory });
             }
 
             return changed;
         }
 
+        /// <summary>
+        /// Write the paths of files to backup to the disco file
+        /// </summary>
+        /// <param name="tempDir">Path to disco file</param>
+        /// <param name="sources">List of source directories and search patterns</param>
+        /// <param name="fromDate">File must have changed since this date to be included</param>
         static public void DiscoverFiles(
-            string discoPath,
+            string tempDir,
             List<Source> sources,
             DateTime fromDate)
         {
-            var discoFile = Path.Combine(discoPath, DiscoName);
+            var discoFile = Path.Combine(tempDir, DiscoName);
 
             if (File.Exists(discoFile))
                 File.Delete(discoFile);
@@ -68,12 +100,12 @@ namespace Backup.Logic
         }
         
         /// <summary>
-        /// Create the control files sources.dat
+        /// Create the sources file
         /// </summary>
-        /// <param name="path">Location of sources file</param>
-        static public void Initialise(string path)
+        /// <param name="tempDir">Location of sources file</param>
+        static private void CreateSourcesFile(string tempDir)
         {
-            var sources = Path.Combine(path, SourcesName);
+            var sources = Path.Combine(tempDir, SourcesName);
             if (!File.Exists(sources))
             {
                 using (var writer = File.CreateText(sources))
@@ -84,10 +116,17 @@ namespace Backup.Logic
             }
         }
 
-
+        /// <summary>
+        /// Backup files discovered
+        /// </summary>
+        /// <param name="path">A target directory</param>
+        /// <param name="archiveDir">A directory to backup to</param>
         static public void Process(string path, string archiveDir = null)
         {
             var discoFile = Path.Combine(path, DiscoName);
+            if (!File.Exists(discoFile))
+                return; // Nothing to do
+
             var discoLines = File.ReadAllLines(discoFile);
 
             // Create processing file
@@ -122,6 +161,19 @@ namespace Backup.Logic
                     }
                 }
             }
+
+            // When complete remove disco file
+
+            #region Write backup date
+            if (File.Exists(Path.Combine(path, LastDateName)))
+                File.Delete(Path.Combine(path, LastDateName));
+
+            using (var writer = File.CreateText(Path.Combine(path, LastDateName)))
+            {
+                writer.WriteLine(DateTime.Now);
+                writer.Close();
+            }
+            #endregion
         }
     }
 }

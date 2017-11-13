@@ -22,7 +22,7 @@ namespace Backup
             // Put the icon in the system tray and allow it react to mouse clicks.          
             ni.MouseClick += new MouseEventHandler(ni_MouseClick);
             ni.Icon = Resources.SystemTrayIcon;
-            ni.Text = "Backup running";
+            ni.Text = "Backup";
             ni.Visible = true;
 
             // Attach a context menu.
@@ -36,10 +36,10 @@ namespace Backup
 
         void ni_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-            {
-                System.Diagnostics.Process.Start("explorer", null);
-            }
+            //if (e.Button == MouseButtons.Left)
+            //{
+            //    System.Diagnostics.Process.Start("explorer", null);
+            //}
         }
     }
 }

@@ -6,6 +6,9 @@
 *.user
 *.userosscache
 *.sln.docstates
+aws s3 credentials.csv
+*.dat
+archive/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

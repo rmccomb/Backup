@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,19 +14,75 @@ namespace Backup.Logic
     {
         // The name of the setting folder
         public const string SettingsFolder = ".bbackup";
+        public const string SettingsName = "bbackup.settings.bin";
 
-        // The configurable location of where the settings for the application live
-        public const string TempDirKey = "tempDir";
-        public const string ArchiveDirKey = "archiveDir";
+        // App.config settings keys
+        public const string TempDirKey = "tempDir"; // The location of SettingsFolder
+        // ...others as req.
 
         // Files capturing the status of the files
         public const string DiscoName = "bbackup.disco.dat";
+        public const string ProcessingName = "bbackup.processing.dat";
+        public const string CatalogName = "bbackup.catalog.dat";
+        public const string LastDateName = "bbackup.last.dat";
+        public const string DestinationsName = "bbackup.destinations.dat";
+
+        // The list of target directories
+        public const string SourcesName = "bbackup.sources.dat";
+
+        /// <summary>
+        /// Get the configured temp directory from application settings or, 
+        /// if not defined create a default under user's Application Data
+        /// </summary>
+        static public string GetTempDirectory()
+        {
+            var tempDir = ConfigurationManager.AppSettings[TempDirKey];
+            if (string.IsNullOrEmpty(tempDir))
+            {
+                tempDir = Directory.GetParent(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+                if (Environment.OSVersion.Version.Major >= 6)
+                {
+                    tempDir = Directory.GetParent(tempDir).ToString();
+                }
+
+                // Default to our folder if nothing set
+                tempDir = Path.Combine(tempDir, FileManager.SettingsFolder);
+                if (!Directory.Exists(tempDir))
+                    Directory.CreateDirectory(tempDir);
+            }
+
+            return tempDir;
+        }
+
+        public static void SaveSettings(DestinationSettings settings)
+        {
+            var formatter = new BinaryFormatter();
+            var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
+            File.Delete(settingsFileName);
+            var stream = new FileStream(settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, settings);
+            stream.Close();
+        }
+
+        public static DestinationSettings GetSettings()
+        {
+            var formatter = new BinaryFormatter();
+            var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
+            var stream = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
+            var settings = (DestinationSettings)formatter.Deserialize(stream);
+            stream.Close();
+            return settings;
+        }
 
         /// <summary>
         /// Get the date of the last backup from file
         /// </summary>
-        public static DateTime GetLastDate(string tempDir)
+        static public DateTime GetLastDate(string tempDir = null)
         {
+            if (tempDir == null)
+                tempDir = GetTempDirectory();
+
             if (!File.Exists(Path.Combine(tempDir, LastDateName)))
                 return DateTime.MinValue;
 
@@ -35,20 +93,25 @@ namespace Backup.Logic
             }
         }
 
-        public const string ProcessingName = "bbackup.processing.dat";
-        public const string CatalogName = "bbackup.catalog.dat";
-        public const string LastDateName = "bbackup.last.dat";
-
-        // The list of target directories
-        public const string SourcesName = "bbackup.sources.dat";
-
-        static public List<Source> GetSources(string tempDir)
+        static public List<Source> GetSources(string tempDir = null)
         {
-            CreateSourcesFile(tempDir);
+            if (tempDir == null)
+                tempDir = GetTempDirectory();
+
+            CreateSourcesFile();
 
             var lines = File.ReadAllLines(Path.Combine(tempDir, SourcesName));
             return new List<Source>(
                 (from l in lines select new Source(l.Split(',')[0].Trim(), l.Split(',')[1].Trim())).Skip(1));
+        }
+
+        static public void SaveSources(List<Source> sources, string tempDir = null)
+        {
+            if (tempDir == null)
+                tempDir = GetTempDirectory();
+
+            File.Delete(Path.Combine(tempDir, SourcesName));
+            CreateSourcesFile(sources);
         }
 
         /// <summary>
@@ -83,10 +146,13 @@ namespace Backup.Logic
         /// <param name="sources">List of source directories and search patterns</param>
         /// <param name="fromDate">File must have changed since this date to be included</param>
         static public void DiscoverFiles(
-            string tempDir,
             List<Source> sources,
-            DateTime fromDate)
+            DateTime fromDate,
+            string tempDir = null)
         {
+            if (tempDir == null)
+                tempDir = GetTempDirectory();
+
             var discoFile = Path.Combine(tempDir, DiscoName);
 
             if (File.Exists(discoFile))
@@ -103,34 +169,46 @@ namespace Backup.Logic
         /// Create the sources file
         /// </summary>
         /// <param name="tempDir">Location of sources file</param>
-        static private void CreateSourcesFile(string tempDir)
+        static private void CreateSourcesFile(List<Source> sources = null)
         {
-            var sources = Path.Combine(tempDir, SourcesName);
-            if (!File.Exists(sources))
+            string tempDir = GetTempDirectory();
+
+            var sourcesPath = Path.Combine(tempDir, SourcesName);
+            if (!File.Exists(sourcesPath))
             {
-                using (var writer = File.CreateText(sources))
+                using (var writer = File.CreateText(sourcesPath))
                 {
                     writer.WriteLine("Directory, Pattern");
+
+                    if (sources != null)
+                    {
+                        sources.ForEach(s =>
+                        {
+                            writer.WriteLine($"{s.Directory}, {s.Pattern}");
+                        });
+                    }
+
                     writer.Close();
                 }
             }
         }
 
         /// <summary>
-        /// Backup files discovered
+        /// Do the backing up of the discovered files
         /// </summary>
-        /// <param name="path">A target directory</param>
         /// <param name="archiveDir">A directory to backup to</param>
-        static public void Process(string path, string archiveDir = null)
+        static public void DoBackup(string archiveDir = null)
         {
-            var discoFile = Path.Combine(path, DiscoName);
+            var tempDir = GetTempDirectory();
+
+            var discoFile = Path.Combine(tempDir, DiscoName);
             if (!File.Exists(discoFile))
                 return; // Nothing to do
 
             var discoLines = File.ReadAllLines(discoFile);
 
             // Create processing file
-            var processing = Path.Combine(path, ProcessingName);
+            var processing = Path.Combine(tempDir, ProcessingName);
             using (var processWriter = File.CreateText(processing))
             {
                 foreach (var discoLine in discoLines)
@@ -165,10 +243,10 @@ namespace Backup.Logic
             // When complete remove disco file
 
             #region Write backup date
-            if (File.Exists(Path.Combine(path, LastDateName)))
-                File.Delete(Path.Combine(path, LastDateName));
+            if (File.Exists(Path.Combine(tempDir, LastDateName)))
+                File.Delete(Path.Combine(tempDir, LastDateName));
 
-            using (var writer = File.CreateText(Path.Combine(path, LastDateName)))
+            using (var writer = File.CreateText(Path.Combine(tempDir, LastDateName)))
             {
                 writer.WriteLine(DateTime.Now);
                 writer.Close();

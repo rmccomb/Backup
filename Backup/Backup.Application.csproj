@@ -59,6 +59,12 @@
       <DependentUpon>ConfigureForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ContextMenus.cs" />
+    <Compile Include="EditSecret.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditSecret.Designer.cs">
+      <DependentUpon>EditSecret.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditSource.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -70,6 +76,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="ConfigureForm.resx">
       <DependentUpon>ConfigureForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditSecret.resx">
+      <DependentUpon>EditSecret.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditSource.resx">
       <DependentUpon>EditSource.cs</DependentUpon>

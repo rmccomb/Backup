@@ -14,30 +14,29 @@ namespace Backup.Test
         [TestMethod]
         public void Process()
         {
-            var path = ConfigurationManager.AppSettings[FileManager.TempDirKey];
+            var tempDir = @"C:\Users\Rob\source\repos\Backup\Backup.Test\test files";
 
             // Get files changed since fromDate
-            var sources = FileManager.GetSources(path);
+            var sources = FileManager.GetSources(tempDir);
 
             // Dummy sources
             if (sources.Count == 0)
-                sources.Add(new Source(@"C:\Users\Rob\source\repos\Backup\Backup.Test\test files", "*.*"));
+                sources.Add(new Source(tempDir, "*.*"));
 
-            var lastDate = FileManager.GetLastDate(path);
-            FileManager.DiscoverFiles(path, sources, lastDate);
+            var lastDate = FileManager.GetLastDate(tempDir);
+            FileManager.DiscoverFiles(sources, lastDate);
 
             // Iterate discovered files and copy while updating status of file in list
-            var archive = ConfigurationManager.AppSettings[FileManager.ArchiveDirKey];
-            FileManager.Process(path, archive);
-
+            var archive = @"C:\Users\Rob\source\repos\Backup\archive";
+            FileManager.DoBackup(archive);
 
         }
 
         [TestMethod]
         public void Config()
         {
-            FileManager.GetSources(ConfigurationManager.AppSettings[FileManager.TempDirKey]);
-            Debug.WriteLine(FileManager.GetLastDate(ConfigurationManager.AppSettings[FileManager.TempDirKey]));
+            FileManager.GetSources();
+            Debug.WriteLine(FileManager.GetLastDate());
         }
 
         [TestMethod]
@@ -46,6 +45,27 @@ namespace Backup.Test
             var path = @"C:\Users\Rob\source\repos\Backup\Backup.Test";
             var sources = FileManager.GetSources(path);
             sources.ForEach(s => Debug.WriteLine($"{s.Directory}, {s.Pattern}"));
+        }
+
+        [TestMethod]
+        public void ReadWriteSettingsFile()
+        {
+            var settings = new DestinationSettings
+            {
+                ArchiveDirectory = @"C:\Users\Rob\source\repos\Backup\archive",
+                AWSProfileName = "default",
+                AWSAccessKeyID = "AKIAIK5CONHAOVWPN27Q",
+                AWSSecretAccessKey = "test123",
+                S3Bucket = "backup.tiz.digital"
+            };
+            FileManager.SaveSettings(settings);
+
+            var loaded = FileManager.GetSettings();
+            Assert.AreEqual(loaded.ArchiveDirectory, settings.ArchiveDirectory);
+            Assert.AreEqual(loaded.AWSAccessKeyID, settings.AWSAccessKeyID);
+            Assert.AreEqual(loaded.AWSProfileName, settings.AWSProfileName);
+            Assert.AreEqual(loaded.AWSSecretAccessKey, settings.AWSSecretAccessKey);
+
         }
     }
 }

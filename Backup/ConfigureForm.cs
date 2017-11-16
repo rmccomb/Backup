@@ -1,38 +1,46 @@
 ﻿using Backup.Logic;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Configuration;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Backup
 {
     public partial class ConfigureForm : Form
     {
-        private List<Source> sources;
+        private List<Source> _sources;
+        private DestinationSettings _settings;
+        private string _awsSecretKey;
 
         public ConfigureForm()
         {
             InitializeComponent();
-            var tempDir = ConfigurationManager.AppSettings[FileManager.TempDirKey];
-            this.sources = FileManager.GetSources(tempDir);
+            this._sources = FileManager.GetSources();
+            this._settings = FileManager.GetSettings();
             this.PopulateControls();
         }
-
+        
         public void PopulateControls()
         {
-            this.uiSources.BeginUpdate();
-            foreach (var source in this.sources)
+            this.Sources.BeginUpdate();
+            this.Sources.Items.Clear();
+            foreach (var source in this._sources)
             {
-                this.uiSources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern }));
+                this.Sources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern }));
             }
-            this.uiSources.EndUpdate();
+            this.Sources.EndUpdate();
+
+            this.ArchivePath.Text = this._settings.ArchiveDirectory;
+            this.AWSProfileName.Text = this._settings.AWSProfileName;
+            this.S3BucketName.Text = this._settings.S3Bucket;
+            this.AWSAccessKey.Text = this._settings.AWSAccessKeyID;
+            this._awsSecretKey = this._settings.AWSSecretAccessKey;
+
+            if (!String.IsNullOrEmpty(this.ArchivePath.Text))
+                this.IsFileSystem.Checked = true;
+
+            if (!String.IsNullOrEmpty(this.S3BucketName.Text))
+                this.IsS3Bucket.Checked = true;
         }
 
         private void New_Click(object sender, EventArgs e)
@@ -42,28 +50,32 @@ namespace Backup
             if (result == DialogResult.OK)
             {
                 var vals = editSource.GetValues();
-                this.uiSources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2 }));
+                this.Sources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2 }));
             }
         }
 
         private void Edit_Click(object sender, EventArgs e)
         {
-            var item = this.uiSources.SelectedItems[0];
+            var item = this.Sources.SelectedItems[0];
             var result = new EditSource(item).ShowDialog();
         }
 
         private void Delete_Click(object sender, EventArgs e)
         {
-            var confirmResult = MessageBox.Show("Are you sure to delete this item?", "Confirm Delete", MessageBoxButtons.YesNo);
-            if (confirmResult == DialogResult.Yes)
+            if (this.Sources.SelectedItems.Count > 0)
             {
-                
+                var confirmResult = MessageBox.Show("Are you sure to delete this item?", "Confirm Delete", MessageBoxButtons.YesNo);
+                if (confirmResult == DialogResult.Yes)
+                {
+                    this._sources.RemoveAt(this.Sources.SelectedIndices[0]);
+                    PopulateControls();
+                }
             }
         }
 
-        private void uiSources_SelectedIndexChanged(object sender, EventArgs e)
+        private void Sources_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (uiSources.SelectedItems != null)
+            if (Sources.SelectedItems != null)
             {
                 this.Edit.Enabled = true;
                 this.Delete.Enabled = true;
@@ -82,7 +94,77 @@ namespace Backup
 
         private void Commit_Click(object sender, EventArgs e)
         {
+            try
+            {
+                FileManager.SaveSources(this._sources);
+                FileManager.SaveSettings(new DestinationSettings
+                {
+                    ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
+                    AWSAccessKeyID = this.IsS3Bucket.Checked ? this.AWSAccessKey.Text : "",
+                    AWSProfileName = this.IsS3Bucket.Checked ? this.AWSProfileName.Text : "",
+                    AWSSecretAccessKey = this.IsS3Bucket.Checked ? this._awsSecretKey : "",
+                    S3Bucket = this.IsS3Bucket.Checked ? this.S3BucketName.Text : ""
+                });
 
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "An Error Occurred");
+            }
+        }
+
+        private void Browse_Click(object sender, EventArgs e)
+        {
+            var result = this.folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK)
+                this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
+        }
+
+        private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.IsFileSystem.Checked)
+            {
+                this.ArchivePath.Enabled = true;
+                this.Browse.Enabled = true;
+            }
+            else
+            {
+                this.ArchivePath.Enabled = false;
+                this.Browse.Enabled = false;
+            }
+        }
+
+        private void IsS3Bucket_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.IsS3Bucket.Checked)
+            {
+                this.S3BucketName.Enabled = true;
+                this.AWSProfileName.Enabled = true;
+                this.AWSAccessKey.Enabled = true;
+                this.AddSecret.Enabled = true;
+            }
+            else
+            {
+                this.S3BucketName.Enabled = false;
+                this.AWSProfileName.Enabled = false;
+                this.AWSAccessKey.Enabled = false;
+                this.AddSecret.Enabled = false;
+            }
+        }
+
+        private void AddSecret_Click(object sender, EventArgs e)
+        {
+            var dlg = new EditSecret();
+            var result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                this._awsSecretKey = dlg.Secret;
+            }
+            else
+            {
+                this._awsSecretKey = "";
+            }
         }
     }
 }

@@ -143,7 +143,7 @@ namespace Backup.Logic
 
             foreach (var file in files)
             {
-                var lastWrite = File.GetLastWriteTimeUtc(file);
+                var lastWrite = File.GetLastWriteTime(file);
                 if (fromDate < lastWrite)
                     changed.Add(new FileDetail(file,directory));
             }
@@ -198,6 +198,7 @@ namespace Backup.Logic
             var files = DiscoverFiles(sources);
             SaveDiscoveredFiles(files);
             DoBackup();
+            UpdateTimestamp(sources);
         }
 
         /// <summary>

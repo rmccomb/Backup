@@ -45,7 +45,7 @@ namespace Backup
 
         public (string, string) GetValues()
         {
-            return (d: Directory.Text, p: Pattern.Text);
+            return (Directory.Text, Pattern.Text);
         }
 
     }

@@ -7,10 +7,8 @@ using System.Windows.Forms;
 
 namespace Backup
 {
-    internal class Program : IDisposable
+    internal class Program
     {
-        static ProcessIcon processIcon;
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -25,46 +23,12 @@ namespace Backup
 
             Initialise();
 
-            FileManager.BackupSuccess += FileManager_BackupSuccess;
-            FileManager.BackupWarning += FileManager_BackupWarning;
-            FileManager.BackupError += FileManager_BackupError;
-
             // Show the system tray icon.
-            processIcon = new ProcessIcon();
+            var processIcon = new ProcessIcon();
             processIcon.Display();
             Application.Run();
         }
-
-        ~Program()
-        {
-            Dispose();
-        }
-
-        private static void FileManager_BackupSuccess()
-        {
-            CreateNotifyInfo("The backup completed successfully");
-        }
-        private static void FileManager_BackupWarning(string warningMessage)
-        {
-            CreateNotifyWarning(warningMessage);
-        }
-        private static void FileManager_BackupError(string errorMessage)
-        {
-            CreateNotifyError(errorMessage);
-        }
-        static public void CreateNotifyInfo(string message)
-        {
-            processIcon.NotifyUser("Information", message, ToolTipIcon.Info);
-        }
-        static public void CreateNotifyWarning(string message)
-        {
-            processIcon.NotifyUser("Warning", message, ToolTipIcon.Warning);
-        }
-        static public void CreateNotifyError(string message)
-        {
-            processIcon.NotifyUser("Error", message, ToolTipIcon.Error);
-        }
-
+        
         /// <summary>
         /// Create the folder for temp files
         /// </summary>
@@ -91,12 +55,6 @@ namespace Backup
             {
                 throw new Exception("There was a problem with the initialisation - check settings", ex);
             }
-        }
-
-        public void Dispose()
-        {
-            if (processIcon != null)
-                processIcon.Dispose();
         }
     }
 }

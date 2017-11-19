@@ -9,40 +9,42 @@ namespace Backup
 {
     public partial class ConfigureForm : Form
     {
-        private List<Source> _sources;
-        private DestinationSettings _settings;
+        //private List<Source> _sources;
+        //private DestinationSettings _settings;
         private string _awsSecretKey;
-        FileList fileList;
+        FileList fileListDlg;
 
         public ConfigureForm()
         {
             InitializeComponent();
-            this._sources = FileManager.GetSources();
-            this._settings = FileManager.GetSettings();
-            this.PopulateControls();
+            
+            PopulateControls();
         }
         
         public void PopulateControls()
         {
-            this.Sources.BeginUpdate();
-            this.Sources.Items.Clear();
-            foreach (var source in this._sources)
+            Sources.BeginUpdate();
+            Sources.Items.Clear();
+            var sources = FileManager.GetSources();
+            foreach (var source in sources)
             {
-                this.Sources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern }));
+                Sources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern, source.LastBackupText }));
             }
-            this.Sources.EndUpdate();
+            Sources.EndUpdate();
 
-            this.ArchivePath.Text = this._settings.ArchiveDirectory;
-            this.AWSProfileName.Text = this._settings.AWSProfileName;
-            this.S3BucketName.Text = this._settings.S3Bucket;
-            this.AWSAccessKey.Text = this._settings.AWSAccessKeyID;
-            this._awsSecretKey = this._settings.AWSSecretAccessKey;
+            var _settings = FileManager.GetSettings();
 
-            if (!String.IsNullOrEmpty(this.ArchivePath.Text))
-                this.IsFileSystem.Checked = true;
+            ArchivePath.Text = _settings.ArchiveDirectory;
+            AWSProfileName.Text = _settings.AWSProfileName;
+            S3BucketName.Text = _settings.S3Bucket;
+            AWSAccessKey.Text = _settings.AWSAccessKeyID;
+            _awsSecretKey = _settings.AWSSecretAccessKey;
 
-            if (!String.IsNullOrEmpty(this.S3BucketName.Text))
-                this.IsS3Bucket.Checked = true;
+            if (!String.IsNullOrEmpty(ArchivePath.Text))
+                IsFileSystem.Checked = true;
+
+            if (!String.IsNullOrEmpty(S3BucketName.Text))
+                IsS3Bucket.Checked = true;
         }
 
         private void New_Click(object sender, EventArgs e)
@@ -52,7 +54,7 @@ namespace Backup
             if (result == DialogResult.OK)
             {
                 var vals = editSource.GetValues();
-                this.Sources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2 }));
+                Sources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2, Source.NeverText }));
             }
         }
 
@@ -62,22 +64,36 @@ namespace Backup
             var result = new EditSource(item).ShowDialog();
         }
 
-        private void Delete_Click(object sender, EventArgs e)
+        private void Remove_Click(object sender, EventArgs e)
         {
-            if (this.Sources.SelectedItems.Count > 0)
+            try
             {
-                var confirmResult = MessageBox.Show("Are you sure to delete this item?", "Confirm Delete", MessageBoxButtons.YesNo);
-                if (confirmResult == DialogResult.Yes)
+                if (this.Sources.SelectedItems.Count > 0)
                 {
-                    this._sources.RemoveAt(this.Sources.SelectedIndices[0]);
-                    PopulateControls();
+                    var confirmResult = MessageBox.Show("Are you sure to delete this item?", "Confirm Delete", MessageBoxButtons.YesNo);
+                    if (confirmResult == DialogResult.Yes)
+                    {
+                        //this._sources.RemoveAt(this.Sources.SelectedIndices[0]);
+                        //Sources.Items.RemoveAt(this.Sources.SelectedIndices[0]);
+                        ListView.SelectedIndexCollection selectedItems = Sources.SelectedIndices;
+                        (from int s in selectedItems orderby s descending select s)
+                            .ToList()
+                            .ForEach(i => Sources.Items.RemoveAt(i));
+
+                        SaveSources();
+                        PopulateControls();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "An Error Occurred");
             }
         }
 
         private void Sources_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (Sources.SelectedItems != null)
+            if (Sources.SelectedItems != null && Sources.SelectedItems.Count > 0)
             {
                 this.Edit.Enabled = true;
                 this.Delete.Enabled = true;
@@ -93,12 +109,7 @@ namespace Backup
         {
             try
             {
-                var toSave = new List<Source>();
-                foreach (ListViewItem item in this.Sources.Items)
-                    toSave.Add(
-                        new Source(item.SubItems[0].Text, item.SubItems[1].Text)); 
-                
-                FileManager.SaveSources(toSave);
+                SaveSources();
                 FileManager.SaveSettings(new DestinationSettings
                 {
                     ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
@@ -112,6 +123,16 @@ namespace Backup
             {
                 MessageBox.Show(ex.Message, "An Error Occurred");
             }
+        }
+
+        private void SaveSources()
+        {
+            var toSave = new List<Source>();
+            foreach (ListViewItem item in this.Sources.Items)
+                toSave.Add(
+                    new Source(item.SubItems[0].Text, item.SubItems[1].Text, item.SubItems[2].Text));
+
+            FileManager.SaveSources(toSave);
         }
 
         private void Browse_Click(object sender, EventArgs e)
@@ -169,17 +190,17 @@ namespace Backup
 
         private void Discover_Click(object sender, EventArgs e)
         {
-            if (this.fileList == null)
+            if (this.fileListDlg == null)
             {
-                this.fileList = new FileList();
-                this.fileList.FormClosed += FileList_FormClosed;
-                this.fileList.ShowDialog();
+                this.fileListDlg = new FileList();
+                this.fileListDlg.FormClosed += FileList_FormClosed;
+                this.fileListDlg.ShowDialog();
             }
         }
 
         private void FileList_FormClosed(object sender, FormClosedEventArgs e)
         {
-            this.fileList = null;
+            this.fileListDlg = null;
         }
 
         private void Close_Click(object sender, EventArgs e)

@@ -5,12 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Backup.Logic
 {
-    public static class FileManager
+    public class FileManager
     {
         // The name of the setting folder
         public const string SettingsFolder = ".bbackup";
@@ -21,14 +19,22 @@ namespace Backup.Logic
         // ...others as req.
 
         // Files capturing the status of the files
-        public const string DiscoName = "bbackup.disco.dat";
+        public const string DiscoveredName = "bbackup.disco.dat";
         public const string ProcessingName = "bbackup.processing.dat";
         public const string CatalogName = "bbackup.catalog.dat";
-        public const string LastDateName = "bbackup.last.dat";
         public const string DestinationsName = "bbackup.destinations.dat";
 
         // The list of target directories
         public const string SourcesName = "bbackup.sources.dat";
+
+        #region events
+        public static event BackupSuccessHandler BackupSuccess;
+        public delegate void BackupSuccessHandler();
+        public static event BackupWarningHandler BackupWarning;
+        public delegate void BackupWarningHandler(string warningMessage);
+        public static event BackupErrorHandler BackupError;
+        public delegate void BackupErrorHandler(string errorMessage);
+        #endregion
 
         /// <summary>
         /// Get the configured temp directory from application settings or, 
@@ -47,7 +53,7 @@ namespace Backup.Logic
                 }
 
                 // Default to our folder if nothing set
-                tempDir = Path.Combine(tempDir, FileManager.SettingsFolder);
+                tempDir = Path.Combine(tempDir, SettingsFolder);
                 if (!Directory.Exists(tempDir))
                     Directory.CreateDirectory(tempDir);
             }
@@ -69,49 +75,55 @@ namespace Backup.Logic
         {
             var formatter = new BinaryFormatter();
             var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
+            CreateSettingsFile(settingsFileName);
             var stream = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
             var settings = (DestinationSettings)formatter.Deserialize(stream);
             stream.Close();
             return settings;
         }
 
-        /// <summary>
-        /// Get the date of the last backup from file
-        /// </summary>
-        static public DateTime GetLastDate(string tempDir = null)
+        private static void CreateSettingsFile(string settingsFileName)
         {
-            if (tempDir == null)
-                tempDir = GetTempDirectory();
-
-            if (!File.Exists(Path.Combine(tempDir, LastDateName)))
-                return DateTime.MinValue;
-
-            using (var reader = File.OpenText(Path.Combine(tempDir, LastDateName)))
-            {
-                var line = reader.ReadLine();
-                return DateTime.Parse(line);
-            }
+            if (!File.Exists(settingsFileName))
+                SaveSettings(new DestinationSettings());
         }
 
-        static public List<Source> GetSources(string tempDir = null)
+        static public List<Source> GetSources()
         {
-            if (tempDir == null)
-                tempDir = GetTempDirectory();
-
             CreateSourcesFile();
-
-            var lines = File.ReadAllLines(Path.Combine(tempDir, SourcesName));
+            var lines = File.ReadAllLines(Path.Combine(GetTempDirectory(), SourcesName)).Skip(1);
             return new List<Source>(
-                (from l in lines select new Source(l.Split(',')[0].Trim(), l.Split(',')[1].Trim())).Skip(1));
+                (from l in lines select new Source(
+                        path: l.Split(',')[0].Trim(),
+                        pattern: l.Split(',')[1].Trim(),
+                        lastBackup: DateTime.Parse(l.Split(',')[2].Trim()))
+                 ));
         }
 
-        static public void SaveSources(List<Source> sources, string tempDir = null)
+        static public void SaveSources(List<Source> sources)
         {
-            if (tempDir == null)
-                tempDir = GetTempDirectory();
-
-            File.Delete(Path.Combine(tempDir, SourcesName));
+            File.Delete(Path.Combine(GetTempDirectory(), SourcesName));
             CreateSourcesFile(sources);
+        }
+
+        /// <summary>
+        /// Write the paths of files to backup to the disco file
+        /// </summary>
+        /// <param name="tempDir">Path to disco file</param>
+        /// <param name="sources">List of source directories and search patterns</param>
+        /// <param name="fromDate">File must have changed since this date to be included</param>
+        static public IEnumerable<FileDetail> DiscoverFiles(
+            List<Source> sources,
+            string tempDir = null)
+        {
+            var files = new List<FileDetail>();
+
+            sources.ForEach(s =>
+            {
+                files.AddRange(GetChangedFiles(s.Directory, s.Pattern, s.LastBackup));
+            });
+
+            return files;
         }
 
         /// <summary>
@@ -121,7 +133,7 @@ namespace Backup.Logic
         /// <param name="pattern">File extension e.g. *.*</param>
         /// <param name="fromDate">The date of the last backup</param>
         /// <returns>List of files</returns>
-        static public List<FileDetail> GetChangedFiles(
+        static public IEnumerable<FileDetail> GetChangedFiles(
             string directory,
             string pattern,
             DateTime fromDate)
@@ -133,38 +145,22 @@ namespace Backup.Logic
             {
                 var lastWrite = File.GetLastWriteTimeUtc(file);
                 if (fromDate < lastWrite)
-                    changed.Add(new FileDetail { FilePath = file, Root = directory });
+                    changed.Add(new FileDetail(file,directory));
             }
 
             return changed;
         }
 
-        /// <summary>
-        /// Write the paths of files to backup to the disco file
-        /// </summary>
-        /// <param name="tempDir">Path to disco file</param>
-        /// <param name="sources">List of source directories and search patterns</param>
-        /// <param name="fromDate">File must have changed since this date to be included</param>
-        static public void DiscoverFiles(
-            List<Source> sources,
-            DateTime fromDate,
-            string tempDir = null)
+        public static void SaveDiscoveredFiles(IEnumerable<FileDetail> fileDetails)
         {
-            if (tempDir == null)
-                tempDir = GetTempDirectory();
-
-            var discoFile = Path.Combine(tempDir, DiscoName);
+            var discoFile = Path.Combine(GetTempDirectory(), DiscoveredName);
 
             if (File.Exists(discoFile))
                 File.Delete(discoFile);
 
-            sources.ForEach(s =>
-            {
-                var files = GetChangedFiles(s.Directory, s.Pattern, fromDate);
-                File.AppendAllLines(discoFile, files.Select(f => $"{f.FilePath}, {f.SubPath}"));
-            });
+            File.AppendAllLines(discoFile, fileDetails.Select(f => $"{f.FilePath}, {f.SubPath}"));
         }
-        
+
         /// <summary>
         /// Create the sources file
         /// </summary>
@@ -178,13 +174,13 @@ namespace Backup.Logic
             {
                 using (var writer = File.CreateText(sourcesPath))
                 {
-                    writer.WriteLine("Directory, Pattern");
+                    writer.WriteLine("Directory, Pattern, LastBackup");
 
                     if (sources != null)
                     {
                         sources.ForEach(s =>
                         {
-                            writer.WriteLine($"{s.Directory}, {s.Pattern}");
+                            writer.WriteLine($"{s.Directory}, {s.Pattern}, {s.LastBackup.ToString()}");
                         });
                     }
 
@@ -194,64 +190,85 @@ namespace Backup.Logic
         }
 
         /// <summary>
+        /// Invoke the whole backup process
+        /// </summary>
+        static public void ProcessBackup()
+        {
+            var sources = GetSources();
+            var files = DiscoverFiles(sources);
+            SaveDiscoveredFiles(files);
+            DoBackup();
+        }
+
+        /// <summary>
         /// Do the backing up of the discovered files
         /// </summary>
         /// <param name="archiveDir">A directory to backup to</param>
         static public void DoBackup(string archiveDir = null)
         {
+            var settings = GetSettings();
             var tempDir = GetTempDirectory();
 
-            var discoFile = Path.Combine(tempDir, DiscoName);
-            if (!File.Exists(discoFile))
-                return; // Nothing to do
-
-            var discoLines = File.ReadAllLines(discoFile);
-
-            // Create processing file
-            var processing = Path.Combine(tempDir, ProcessingName);
-            using (var processWriter = File.CreateText(processing))
+            var filesName = Path.Combine(tempDir, DiscoveredName);
+            if (!File.Exists(filesName))
             {
-                foreach (var discoLine in discoLines)
+                BackupWarning?.Invoke("No new or modified files were discovered");
+                return; // Nothing to do
+            }
+
+            var files = File.ReadAllLines(filesName);
+
+            if (archiveDir == null)
+                archiveDir = settings.ArchiveDirectory;
+
+            if (!String.IsNullOrEmpty(archiveDir))
+            {
+                // Create processing file and copy logging files to processing file
+                var processing = Path.Combine(tempDir, ProcessingName);
+                using (var processWriter = File.CreateText(processing))
                 {
-                    try
+                    foreach (var file in files)
                     {
-                        // Copy file and append to processing file
-                        var filepath = (from f in discoLine.Split(',') select f.Trim()).First();
-                        var subpath = (from f in discoLine.Split(',') select f.Trim()).Last();
+                        try
+                        {
+                            // Copy file and append to processing file
+                            var filepath = (from f in file.Split(',') select f.Trim()).First();
+                            var subpath = (from f in file.Split(',') select f.Trim()).Last();
 
-                        // Create the subpath in archive
-                        var splits = subpath.Split('\\');
-                        var subpathDir = "";
-                        for (int i = 0; i < splits.Length - 1; i++)
-                            subpathDir += "\\" + splits[i];
+                            // Create the subpath in archive
+                            var splits = subpath.Split('\\');
+                            var subpathDir = "";
+                            for (int i = 0; i < splits.Length - 1; i++)
+                                subpathDir += "\\" + splits[i];
 
-                        var newDir = Path.Combine(archiveDir, subpathDir.TrimStart('\\'));
-                        var di = Directory.CreateDirectory(newDir);
-                        Debug.Write(di);
+                            var newDir = Path.Combine(archiveDir, subpathDir.TrimStart('\\'));
+                            var di = Directory.CreateDirectory(newDir);
+                            Debug.Write(di);
 
-                        File.Copy(filepath, Path.Combine(archiveDir, subpath.TrimStart('\\')), true);
-                        processWriter.WriteLine(discoLine);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex);
-                        throw ex;
+                            File.Copy(filepath, Path.Combine(archiveDir, subpath.TrimStart('\\')), true);
+                            processWriter.WriteLine(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                            //throw ex;
+                            BackupError(ex.Message);
+                        }
                     }
                 }
             }
 
-            // When complete remove disco file
+            // Success
+            BackupSuccess?.Invoke();
+        }
 
-            #region Write backup date
-            if (File.Exists(Path.Combine(tempDir, LastDateName)))
-                File.Delete(Path.Combine(tempDir, LastDateName));
-
-            using (var writer = File.CreateText(Path.Combine(tempDir, LastDateName)))
-            {
-                writer.WriteLine(DateTime.Now);
-                writer.Close();
-            }
-            #endregion
+        /// <summary>
+        /// Update the timestamp on the sources file
+        /// </summary>
+        public static void UpdateTimestamp(List<Source> sources)
+        {
+            sources.ForEach(s => s.LastBackup = DateTime.Now);
+            SaveSources(sources);
         }
     }
 }

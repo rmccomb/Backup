@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfigureForm));
             this.Sources = new System.Windows.Forms.ListView();
             this.Directory = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Pattern = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -49,6 +50,7 @@
             this.ArchivePath = new System.Windows.Forms.TextBox();
             this.IsS3Bucket = new System.Windows.Forms.CheckBox();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.Discover = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -78,7 +80,7 @@
             // 
             // New
             // 
-            this.New.Location = new System.Drawing.Point(269, 198);
+            this.New.Location = new System.Drawing.Point(265, 198);
             this.New.Name = "New";
             this.New.Size = new System.Drawing.Size(77, 23);
             this.New.TabIndex = 1;
@@ -89,7 +91,7 @@
             // Edit
             // 
             this.Edit.Enabled = false;
-            this.Edit.Location = new System.Drawing.Point(351, 198);
+            this.Edit.Location = new System.Drawing.Point(349, 198);
             this.Edit.Name = "Edit";
             this.Edit.Size = new System.Drawing.Size(77, 23);
             this.Edit.TabIndex = 2;
@@ -127,17 +129,17 @@
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 5;
-            this.Cancel.Text = "Cancel";
+            this.Cancel.Text = "Close";
             this.Cancel.UseVisualStyleBackColor = true;
-            this.Cancel.Click += new System.EventHandler(this.Cancel_Click);
+            this.Cancel.Click += new System.EventHandler(this.Close_Click);
             // 
             // Commit
             // 
-            this.Commit.Location = new System.Drawing.Point(365, 483);
+            this.Commit.Location = new System.Drawing.Point(364, 483);
             this.Commit.Name = "Commit";
             this.Commit.Size = new System.Drawing.Size(75, 23);
             this.Commit.TabIndex = 6;
-            this.Commit.Text = "OK";
+            this.Commit.Text = "Save";
             this.Commit.UseVisualStyleBackColor = true;
             this.Commit.Click += new System.EventHandler(this.Commit_Click);
             // 
@@ -254,18 +256,33 @@
             this.IsS3Bucket.UseVisualStyleBackColor = true;
             this.IsS3Bucket.CheckedChanged += new System.EventHandler(this.IsS3Bucket_CheckedChanged);
             // 
+            // Discover
+            // 
+            this.Discover.Image = global::Backup.Properties.Resources.StartPoint_16x;
+            this.Discover.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.Discover.Location = new System.Drawing.Point(28, 483);
+            this.Discover.Name = "Discover";
+            this.Discover.Size = new System.Drawing.Size(112, 23);
+            this.Discover.TabIndex = 9;
+            this.Discover.Text = "Discover Files...";
+            this.Discover.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.Discover.UseVisualStyleBackColor = true;
+            this.Discover.Click += new System.EventHandler(this.Discover_Click);
+            // 
             // ConfigureForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(550, 525);
+            this.Controls.Add(this.Discover);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.Commit);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.groupBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ConfigureForm";
-            this.Text = "ConfigureForm";
+            this.Text = "Configure";
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
@@ -296,5 +313,6 @@
         private System.Windows.Forms.TextBox AWSProfileName;
         private System.Windows.Forms.TextBox S3BucketName;
         private System.Windows.Forms.Button AddSecret;
+        private System.Windows.Forms.Button Discover;
     }
 }

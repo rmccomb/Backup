@@ -71,6 +71,12 @@
     <Compile Include="EditSource.Designer.cs">
       <DependentUpon>EditSource.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileList.Designer.cs">
+      <DependentUpon>FileList.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProcessIcon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,21 +89,24 @@
     <EmbeddedResource Include="EditSource.resx">
       <DependentUpon>EditSource.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileList.resx">
+      <DependentUpon>FileList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -108,17 +117,21 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\SystemTrayIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Backup.Logic\Backup.Logic.csproj">
       <Project>{8a29e36d-fbbf-4dfc-b0e0-9d11159b7596}</Project>
       <Name>Backup.Logic</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Backup.png" />
-    <None Include="Resources\Discover.png" />
+    <None Include="Resources\Property_16x.png" />
+    <None Include="Resources\Open_16x.png" />
+    <None Include="Resources\Open.ico" />
+    <Content Include="Resources\Property.ico" />
+    <Content Include="Resources\Save.ico" />
+    <None Include="Resources\StartPoint_16x.png" />
+    <None Include="Resources\SearchGo_16x_blue.png" />
+    <None Include="Resources\Synchronize_16x.png" />
+    <None Include="Resources\save_16xMD.png" />
     <Content Include="_TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

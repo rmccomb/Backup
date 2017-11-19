@@ -5,6 +5,11 @@ namespace Backup.Logic
 {
     public class FileDetail
     {
+        public FileDetail(string path, string root)
+        {
+            this.FilePath = path;
+            this.Root = root;
+        }
         /// <summary>
         /// The path to the file to backup
         /// </summary>

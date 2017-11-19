@@ -33,6 +33,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.FilesList = new System.Windows.Forms.ListView();
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.subpath = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Backup = new System.Windows.Forms.Button();
             this.Close = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -50,10 +51,10 @@
             this.groupBox1.Controls.Add(this.FilesList);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(730, 443);
+            this.groupBox1.Size = new System.Drawing.Size(875, 443);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Discovered Files";
+            this.groupBox1.Text = "Files to include in backup";
             // 
             // FilesList
             // 
@@ -61,10 +62,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FilesList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.file});
+            this.file,
+            this.subpath});
             this.FilesList.Location = new System.Drawing.Point(6, 19);
             this.FilesList.Name = "FilesList";
-            this.FilesList.Size = new System.Drawing.Size(718, 418);
+            this.FilesList.Size = new System.Drawing.Size(863, 418);
             this.FilesList.TabIndex = 0;
             this.FilesList.UseCompatibleStateImageBehavior = false;
             this.FilesList.View = System.Windows.Forms.View.Details;
@@ -73,14 +75,19 @@
             // file
             // 
             this.file.Text = "File";
-            this.file.Width = 706;
+            this.file.Width = 509;
+            // 
+            // subpath
+            // 
+            this.subpath.Text = "Subpath";
+            this.subpath.Width = 347;
             // 
             // Backup
             // 
             this.Backup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Backup.Image = global::Backup.Properties.Resources.Open_16x;
             this.Backup.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.Backup.Location = new System.Drawing.Point(565, 477);
+            this.Backup.Location = new System.Drawing.Point(710, 477);
             this.Backup.Name = "Backup";
             this.Backup.Size = new System.Drawing.Size(75, 23);
             this.Backup.TabIndex = 0;
@@ -92,7 +99,7 @@
             // Close
             // 
             this.Close.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Close.Location = new System.Drawing.Point(649, 477);
+            this.Close.Location = new System.Drawing.Point(794, 477);
             this.Close.Name = "Close";
             this.Close.Size = new System.Drawing.Size(75, 23);
             this.Close.TabIndex = 7;
@@ -112,10 +119,11 @@
             this.removeFromDiscoveredFilesToolStripMenuItem.Name = "removeFromDiscoveredFilesToolStripMenuItem";
             this.removeFromDiscoveredFilesToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.removeFromDiscoveredFilesToolStripMenuItem.Text = "Remove from discovered files";
-            this.removeFromDiscoveredFilesToolStripMenuItem.Click += new System.EventHandler(this.removeFromDiscoveredFilesToolStripMenuItem_Click);
+            this.removeFromDiscoveredFilesToolStripMenuItem.Click += new System.EventHandler(this.RemoveFromDiscoveredFiles_Click);
             // 
             // Message
             // 
+            this.Message.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Message.AutoSize = true;
             this.Message.Location = new System.Drawing.Point(18, 477);
             this.Message.Name = "Message";
@@ -127,14 +135,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(754, 522);
-            this.Controls.Add(this.Message);
+            this.ClientSize = new System.Drawing.Size(899, 522);
             this.Controls.Add(this.Backup);
             this.Controls.Add(this.Close);
+            this.Controls.Add(this.Message);
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FileList";
-            this.Text = "File List";
+            this.Text = "Discover Files";
             this.groupBox1.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -152,5 +160,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem removeFromDiscoveredFilesToolStripMenuItem;
         private System.Windows.Forms.Label Message;
+        private System.Windows.Forms.ColumnHeader subpath;
     }
 }

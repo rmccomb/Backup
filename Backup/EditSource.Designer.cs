@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditSource));
             this.label1 = new System.Windows.Forms.Label();
             this.Directory = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -69,6 +70,7 @@
             this.Pattern.Name = "Pattern";
             this.Pattern.Size = new System.Drawing.Size(104, 20);
             this.Pattern.TabIndex = 3;
+            this.Pattern.Text = "*.*";
             // 
             // Browse
             // 
@@ -112,6 +114,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.Directory);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "EditSource";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = "EditSource";

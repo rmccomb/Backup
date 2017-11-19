@@ -61,21 +61,21 @@ namespace Backup.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Bitmap Backup {
+        internal static System.Drawing.Icon Open {
             get {
-                object obj = ResourceManager.GetObject("Backup", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
+                object obj = ResourceManager.GetObject("Open", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Discover {
+        internal static System.Drawing.Bitmap Open_16x {
             get {
-                object obj = ResourceManager.GetObject("Discover", resourceCulture);
+                object obj = ResourceManager.GetObject("Open_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,10 +83,70 @@ namespace Backup.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon SystemTrayIcon {
+        internal static System.Drawing.Icon Property {
             get {
-                object obj = ResourceManager.GetObject("SystemTrayIcon", resourceCulture);
+                object obj = ResourceManager.GetObject("Property", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Property_16x {
+            get {
+                object obj = ResourceManager.GetObject("Property_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Save {
+            get {
+                object obj = ResourceManager.GetObject("Save", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap save_16xMD {
+            get {
+                object obj = ResourceManager.GetObject("save_16xMD", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SearchGo_16x_blue {
+            get {
+                object obj = ResourceManager.GetObject("SearchGo_16x_blue", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap StartPoint_16x {
+            get {
+                object obj = ResourceManager.GetObject("StartPoint_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Synchronize_16x {
+            get {
+                object obj = ResourceManager.GetObject("Synchronize_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

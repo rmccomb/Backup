@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditSecret));
             this.Commit = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -59,9 +60,9 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(13, 20);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(55, 13);
+            this.label1.Size = new System.Drawing.Size(62, 13);
             this.label1.TabIndex = 9;
-            this.label1.Text = "Secret ID:";
+            this.label1.Text = "Secret Key:";
             // 
             // SecretID
             // 
@@ -79,8 +80,9 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.Commit);
             this.Controls.Add(this.Cancel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "EditSecret";
-            this.Text = "Add Secret";
+            this.Text = "Add AWS Profile Secret Access Key";
             this.ResumeLayout(false);
             this.PerformLayout();
 

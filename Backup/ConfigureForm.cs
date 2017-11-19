@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace Backup
 {
@@ -11,6 +12,7 @@ namespace Backup
         private List<Source> _sources;
         private DestinationSettings _settings;
         private string _awsSecretKey;
+        FileList fileList;
 
         public ConfigureForm()
         {
@@ -87,16 +89,16 @@ namespace Backup
             }
         }
 
-        private void Cancel_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
         private void Commit_Click(object sender, EventArgs e)
         {
             try
             {
-                FileManager.SaveSources(this._sources);
+                var toSave = new List<Source>();
+                foreach (ListViewItem item in this.Sources.Items)
+                    toSave.Add(
+                        new Source(item.SubItems[0].Text, item.SubItems[1].Text)); 
+                
+                FileManager.SaveSources(toSave);
                 FileManager.SaveSettings(new DestinationSettings
                 {
                     ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
@@ -105,8 +107,6 @@ namespace Backup
                     AWSSecretAccessKey = this.IsS3Bucket.Checked ? this._awsSecretKey : "",
                     S3Bucket = this.IsS3Bucket.Checked ? this.S3BucketName.Text : ""
                 });
-
-                this.Close();
             }
             catch (Exception ex)
             {
@@ -165,6 +165,26 @@ namespace Backup
             {
                 this._awsSecretKey = "";
             }
+        }
+
+        private void Discover_Click(object sender, EventArgs e)
+        {
+            if (this.fileList == null)
+            {
+                this.fileList = new FileList();
+                this.fileList.FormClosed += FileList_FormClosed;
+                this.fileList.ShowDialog();
+            }
+        }
+
+        private void FileList_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.fileList = null;
+        }
+
+        private void Close_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

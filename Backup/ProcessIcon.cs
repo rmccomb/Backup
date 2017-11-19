@@ -1,40 +1,44 @@
 ﻿using System;
 using System.Windows.Forms;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Backup.Properties;
 
 namespace Backup
 {
-    class ProcessIcon : IDisposable
+    /// <summary>
+    /// Encapsulates the System Tray Icon functionality
+    /// </summary>
+    internal class ProcessIcon : IDisposable
     {
-        NotifyIcon ni;
+        NotifyIcon notifyIcon;
 
         public ProcessIcon()
         {
-            ni = new NotifyIcon();
+            notifyIcon = new NotifyIcon();
         }
 
         public void Display()
         {
             // Put the icon in the system tray and allow it react to mouse clicks.          
-            ni.MouseClick += new MouseEventHandler(ni_MouseClick);
-            ni.Icon = Resources.SystemTrayIcon;
-            ni.Text = "Backup";
-            ni.Visible = true;
+            notifyIcon.MouseClick += new MouseEventHandler(NotifyIcon_MouseClick);
+            notifyIcon.Icon = Resources.Save;
+            notifyIcon.Text = "Backup Utility";
+            notifyIcon.Visible = true;
 
             // Attach a context menu.
-            ni.ContextMenuStrip = new ContextMenus().Create();
+            notifyIcon.ContextMenuStrip = new ContextMenus().Create();
         }
 
         public void Dispose()
         {
-            ni.Dispose();
+            notifyIcon.Dispose();
         }
 
-        void ni_MouseClick(object sender, MouseEventArgs e)
+        internal void NotifyUser(string title, string message, ToolTipIcon icon)
+        {
+            notifyIcon.ShowBalloonTip(5000, title, message, icon);
+        }
+
+        void NotifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
             //if (e.Button == MouseButtons.Left)
             //{

@@ -10,14 +10,17 @@ namespace Backup.Logic
     {
         private string directory;
         private string pattern;
+        private DateTime lastBackup;
 
         public string Directory { get => directory; set => directory = value; }
         public string Pattern { get => pattern; set => pattern = value; }
+        public DateTime LastBackup { get => lastBackup; set => lastBackup = value; }
 
-        public Source(string path, string pattern)
+        public Source(string path, string pattern, DateTime? lastBackup = null)
         {
-            this.Directory= path;
-            this.Pattern = pattern;
+            Directory= path;
+            Pattern = pattern;
+            LastBackup = lastBackup == null ? DateTime.MinValue : lastBackup.Value;
         }
     }
 }

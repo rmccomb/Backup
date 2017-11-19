@@ -6,29 +6,34 @@ using System.Configuration;
 
 namespace Backup
 {
+    /// <summary>
+    /// Encapsulates menu functionality include dialog management
+    /// </summary>
     public class ContextMenus
     {
         ConfigureForm config;
+        FileList fileList;
 
         public ContextMenuStrip Create()
         {
             ContextMenuStrip menu = new ContextMenuStrip();
 
             var item = new ToolStripMenuItem();
-            item.Text = "Discover files";
+            item.Text = "Discover files...";
             item.Click += new EventHandler(Discover_Click);
-            item.Image = Resources.Discover;
+            item.Image = Resources.StartPoint_16x;
             menu.Items.Add(item);
 
             var backup = new ToolStripMenuItem();
             backup.Text = "Backup now";
             backup.Click += new EventHandler(Backup_Click);
-            backup.Image = Resources.Backup;
+            backup.Image = Resources.Open_16x;
             menu.Items.Add(backup);
 
             var configure = new ToolStripMenuItem();
-            configure.Text = "Configure";
+            configure.Text = "Configure...";
             configure.Click += new EventHandler(Configure_Click);
+            configure.Image = Resources.save_16xMD;
             menu.Items.Add(configure);
 
             var sep = new ToolStripSeparator();
@@ -59,15 +64,29 @@ namespace Backup
 
         private void Backup_Click(object sender, EventArgs e)
         {
-            var archive = ""; // TODO
-            FileManager.DoBackup(archive);
+            try
+            {
+                FileManager.ProcessBackup();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "An Error Occurred");
+            }
         }
 
         private void Discover_Click(object sender, EventArgs e)
         {
-            var sources = FileManager.GetSources();
-            var lastDate = FileManager.GetLastDate();
-            FileManager.DiscoverFiles(sources, lastDate);
+            if (this.fileList == null)
+            {
+                this.fileList = new FileList();
+                this.fileList.FormClosed += FileList_FormClosed;
+                this.fileList.ShowDialog();
+            }
+        }
+
+        private void FileList_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.fileList = null;
         }
 
         private void Exit_Click(object sender, EventArgs e)

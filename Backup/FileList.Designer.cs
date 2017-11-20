@@ -35,7 +35,7 @@
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.subpath = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Backup = new System.Windows.Forms.Button();
-            this.Close = new System.Windows.Forms.Button();
+            this.CloseForm = new System.Windows.Forms.Button();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removeFromDiscoveredFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.Message = new System.Windows.Forms.Label();
@@ -96,16 +96,16 @@
             this.Backup.UseVisualStyleBackColor = true;
             this.Backup.Click += new System.EventHandler(this.Backup_Click);
             // 
-            // Close
+            // CloseForm
             // 
-            this.Close.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Close.Location = new System.Drawing.Point(794, 477);
-            this.Close.Name = "Close";
-            this.Close.Size = new System.Drawing.Size(75, 23);
-            this.Close.TabIndex = 7;
-            this.Close.Text = "Close";
-            this.Close.UseVisualStyleBackColor = true;
-            this.Close.Click += new System.EventHandler(this.Close_Click);
+            this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.CloseForm.Location = new System.Drawing.Point(794, 477);
+            this.CloseForm.Name = "CloseForm";
+            this.CloseForm.Size = new System.Drawing.Size(75, 23);
+            this.CloseForm.TabIndex = 7;
+            this.CloseForm.Text = "Close";
+            this.CloseForm.UseVisualStyleBackColor = true;
+            this.CloseForm.Click += new System.EventHandler(this.Close_Click);
             // 
             // contextMenuStrip1
             // 
@@ -137,7 +137,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(899, 522);
             this.Controls.Add(this.Backup);
-            this.Controls.Add(this.Close);
+            this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.Message);
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -155,7 +155,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.ListView FilesList;
         private System.Windows.Forms.Button Backup;
-        private System.Windows.Forms.Button Close;
+        private System.Windows.Forms.Button CloseForm;
         private System.Windows.Forms.ColumnHeader file;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem removeFromDiscoveredFilesToolStripMenuItem;

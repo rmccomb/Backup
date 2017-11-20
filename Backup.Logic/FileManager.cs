@@ -29,7 +29,7 @@ namespace Backup.Logic
 
         #region events
         public static event BackupSuccessHandler BackupSuccess;
-        public delegate void BackupSuccessHandler();
+        public delegate void BackupSuccessHandler(string successMessage);
         public static event BackupWarningHandler BackupWarning;
         public delegate void BackupWarningHandler(string warningMessage);
         public static event BackupErrorHandler BackupError;
@@ -194,11 +194,19 @@ namespace Backup.Logic
         /// </summary>
         static public void ProcessBackup()
         {
-            var sources = GetSources();
-            var files = DiscoverFiles(sources);
-            SaveDiscoveredFiles(files);
-            DoBackup();
-            UpdateTimestamp(sources);
+            try
+            {
+                var sources = GetSources();
+                var files = DiscoverFiles(sources);
+                SaveDiscoveredFiles(files);
+                DoBackup();
+                UpdateTimestamp(sources);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                BackupError?.Invoke(ex.Message);
+            }
         }
 
         /// <summary>
@@ -224,6 +232,7 @@ namespace Backup.Logic
 
             if (!String.IsNullOrEmpty(archiveDir))
             {
+                int fileCount = 0;
                 // Create processing file and copy logging files to processing file
                 var processing = Path.Combine(tempDir, ProcessingName);
                 using (var processWriter = File.CreateText(processing))
@@ -248,6 +257,7 @@ namespace Backup.Logic
 
                             File.Copy(filepath, Path.Combine(archiveDir, subpath.TrimStart('\\')), true);
                             processWriter.WriteLine(file);
+                            fileCount++;
                         }
                         catch (Exception ex)
                         {
@@ -257,10 +267,13 @@ namespace Backup.Logic
                         }
                     }
                 }
-            }
 
-            // Success
-            BackupSuccess?.Invoke();
+                BackupSuccess?.Invoke($"Backup copied {fileCount} files to archive");
+            }
+            else
+            {
+                BackupWarning?.Invoke("No archive directory is defined, no files were backed up");
+            }
         }
 
         /// <summary>

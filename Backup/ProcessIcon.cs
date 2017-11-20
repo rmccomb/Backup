@@ -34,9 +34,9 @@ namespace Backup
             FileManager.BackupError += FileManager_BackupError;
         }
 
-        private void FileManager_BackupSuccess()
+        private void FileManager_BackupSuccess(string successMessage)
         {
-            CreateNotifyInfo("The backup completed successfully");
+            CreateNotifyInfo(successMessage);
         }
         private void FileManager_BackupWarning(string warningMessage)
         {

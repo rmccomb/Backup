@@ -1,11 +1,9 @@
 ﻿STI commands
-- discover now (finds new files), presents list option to select and backup
-- update sources list (directories+patterns to scan)
-- restore from backup
-- configure - archive folder, AWS account+secret (encrypted)
-- exit
+- save secret and encrypt?
 
 Scheduled Task Setup
 - program starts on login
 - processes discovered files
 
+AWS
+- S3 bucket

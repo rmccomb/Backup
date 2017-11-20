@@ -1,7 +1,6 @@
 ﻿using Backup.Logic;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Windows.Forms;
 using System.Linq;
 
@@ -11,8 +10,9 @@ namespace Backup
     {
         //private List<Source> _sources;
         //private DestinationSettings _settings;
-        private string _awsSecretKey;
+        //private string _awsSecretKey;
         FileList fileListDlg;
+        DestinationForm destForm;
 
         public ConfigureForm()
         {
@@ -31,20 +31,6 @@ namespace Backup
                 Sources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern, source.LastBackupText }));
             }
             Sources.EndUpdate();
-
-            var _settings = FileManager.GetSettings();
-
-            ArchivePath.Text = _settings.ArchiveDirectory;
-            AWSProfileName.Text = _settings.AWSProfileName;
-            S3BucketName.Text = _settings.S3Bucket;
-            AWSAccessKey.Text = _settings.AWSAccessKeyID;
-            _awsSecretKey = _settings.AWSSecretAccessKey;
-
-            if (!String.IsNullOrEmpty(ArchivePath.Text))
-                IsFileSystem.Checked = true;
-
-            if (!String.IsNullOrEmpty(S3BucketName.Text))
-                IsS3Bucket.Checked = true;
         }
 
         private void New_Click(object sender, EventArgs e)
@@ -56,6 +42,8 @@ namespace Backup
                 var vals = editSource.GetValues();
                 Sources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2, Source.NeverText }));
             }
+
+            SaveSources();
         }
 
         private void Edit_Click(object sender, EventArgs e)
@@ -73,8 +61,6 @@ namespace Backup
                     var confirmResult = MessageBox.Show("Are you sure to delete this item?", "Confirm Delete", MessageBoxButtons.YesNo);
                     if (confirmResult == DialogResult.Yes)
                     {
-                        //this._sources.RemoveAt(this.Sources.SelectedIndices[0]);
-                        //Sources.Items.RemoveAt(this.Sources.SelectedIndices[0]);
                         ListView.SelectedIndexCollection selectedItems = Sources.SelectedIndices;
                         (from int s in selectedItems orderby s descending select s)
                             .ToList()
@@ -105,26 +91,6 @@ namespace Backup
             }
         }
 
-        private void Commit_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                SaveSources();
-                FileManager.SaveSettings(new DestinationSettings
-                {
-                    ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
-                    AWSAccessKeyID = this.IsS3Bucket.Checked ? this.AWSAccessKey.Text : "",
-                    AWSProfileName = this.IsS3Bucket.Checked ? this.AWSProfileName.Text : "",
-                    AWSSecretAccessKey = this.IsS3Bucket.Checked ? this._awsSecretKey : "",
-                    S3Bucket = this.IsS3Bucket.Checked ? this.S3BucketName.Text : ""
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "An Error Occurred");
-            }
-        }
-
         private void SaveSources()
         {
             var toSave = new List<Source>();
@@ -135,58 +101,58 @@ namespace Backup
             FileManager.SaveSources(toSave);
         }
 
-        private void Browse_Click(object sender, EventArgs e)
-        {
-            var result = this.folderBrowserDialog1.ShowDialog();
-            if (result == DialogResult.OK)
-                this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
-        }
+        //private void Browse_Click(object sender, EventArgs e)
+        //{
+        //    var result = this.folderBrowserDialog1.ShowDialog();
+        //    if (result == DialogResult.OK)
+        //        this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
+        //}
 
-        private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
-        {
-            if (this.IsFileSystem.Checked)
-            {
-                this.ArchivePath.Enabled = true;
-                this.Browse.Enabled = true;
-            }
-            else
-            {
-                this.ArchivePath.Enabled = false;
-                this.Browse.Enabled = false;
-            }
-        }
+        //private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    if (this.IsFileSystem.Checked)
+        //    {
+        //        this.ArchivePath.Enabled = true;
+        //        this.Browse.Enabled = true;
+        //    }
+        //    else
+        //    {
+        //        this.ArchivePath.Enabled = false;
+        //        this.Browse.Enabled = false;
+        //    }
+        //}
 
-        private void IsS3Bucket_CheckedChanged(object sender, EventArgs e)
-        {
-            if (this.IsS3Bucket.Checked)
-            {
-                this.S3BucketName.Enabled = true;
-                this.AWSProfileName.Enabled = true;
-                this.AWSAccessKey.Enabled = true;
-                this.AddSecret.Enabled = true;
-            }
-            else
-            {
-                this.S3BucketName.Enabled = false;
-                this.AWSProfileName.Enabled = false;
-                this.AWSAccessKey.Enabled = false;
-                this.AddSecret.Enabled = false;
-            }
-        }
+        //private void IsS3Bucket_CheckedChanged(object sender, EventArgs e)
+        //{
+        //    if (this.IsS3Bucket.Checked)
+        //    {
+        //        this.S3BucketName.Enabled = true;
+        //        this.AWSProfileName.Enabled = true;
+        //        this.AWSAccessKey.Enabled = true;
+        //        this.AddSecret.Enabled = true;
+        //    }
+        //    else
+        //    {
+        //        this.S3BucketName.Enabled = false;
+        //        this.AWSProfileName.Enabled = false;
+        //        this.AWSAccessKey.Enabled = false;
+        //        this.AddSecret.Enabled = false;
+        //    }
+        //}
 
-        private void AddSecret_Click(object sender, EventArgs e)
-        {
-            var dlg = new EditSecret();
-            var result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                this._awsSecretKey = dlg.Secret;
-            }
-            else
-            {
-                this._awsSecretKey = "";
-            }
-        }
+        //private void AddSecret_Click(object sender, EventArgs e)
+        //{
+        //    var dlg = new EditSecret();
+        //    var result = dlg.ShowDialog();
+        //    if (result == DialogResult.OK)
+        //    {
+        //        this._awsSecretKey = dlg.Secret;
+        //    }
+        //    else
+        //    {
+        //        this._awsSecretKey = "";
+        //    }
+        //}
 
         private void Discover_Click(object sender, EventArgs e)
         {
@@ -206,6 +172,21 @@ namespace Backup
         private void Close_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void BackupDestination_Click(object sender, EventArgs e)
+        {
+            if (this.destForm == null)
+            {
+                this.destForm = new DestinationForm();
+                this.destForm.FormClosed += DestForm_FormClosed;
+                this.destForm.ShowDialog();
+            }
+        }
+
+        private void DestForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.destForm = null;
         }
     }
 }

@@ -1,17 +1,31 @@
 ﻿using Backup.Logic;
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace Backup
 {
     public partial class DestinationForm : Form
     {
+        private DestinationSettings settings;
         private string _awsSecretKey;
 
         public DestinationForm()
         {
             InitializeComponent();
             PopulateControls();
+            this.FormClosing += DestinationForm_FormClosing;
+        }
+
+        private void DestinationForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.HasChanges())
+            {
+                var dlg = new MessageForm("Commit changes?", "Confirm Close");
+                var result = dlg.ShowDialog(this);
+                if (result == DialogResult.Yes)
+                    SaveSettings();
+            }
         }
 
         private void Browse_Click(object sender, EventArgs e)
@@ -25,13 +39,13 @@ namespace Backup
 
         private void PopulateControls()
         {
-            var _settings = FileManager.GetSettings();
+            this.settings = FileManager.GetSettings();
 
-            ArchivePath.Text = _settings.ArchiveDirectory;
-            AWSProfileName.Text = _settings.AWSProfileName;
-            S3BucketName.Text = _settings.S3Bucket;
-            AWSAccessKey.Text = _settings.AWSAccessKeyID;
-            _awsSecretKey = _settings.AWSSecretAccessKey;
+            ArchivePath.Text = settings.ArchiveDirectory;
+            //AWSProfileName.Text = _settings.AWSProfileName;
+            S3BucketName.Text = settings.S3Bucket;
+            AWSAccessKey.Text = settings.AWSAccessKeyID;
+            _awsSecretKey = settings.AWSSecretAccessKey;
 
             if (!String.IsNullOrEmpty(ArchivePath.Text))
                 IsFileSystem.Checked = true;
@@ -49,6 +63,7 @@ namespace Backup
             }
             else
             {
+                this.ArchivePath.Text = String.Empty;
                 this.ArchivePath.Enabled = false;
                 this.Browse.Enabled = false;
             }
@@ -59,14 +74,15 @@ namespace Backup
             if (this.IsS3Bucket.Checked)
             {
                 this.S3BucketName.Enabled = true;
-                this.AWSProfileName.Enabled = true;
+                //this.AWSProfileName.Enabled = true;
                 this.AWSAccessKey.Enabled = true;
                 this.AddSecret.Enabled = true;
             }
             else
             {
+                this.S3BucketName.Text = String.Empty;
                 this.S3BucketName.Enabled = false;
-                this.AWSProfileName.Enabled = false;
+                //this.AWSProfileName.Enabled = false;
                 this.AWSAccessKey.Enabled = false;
                 this.AddSecret.Enabled = false;
             }
@@ -86,24 +102,47 @@ namespace Backup
             }
         }
 
+        private bool HasChanges()
+        {
+            if (settings.ArchiveDirectory != this.ArchivePath.Text ||
+                settings.AWSAccessKeyID != this.AWSAccessKey.Text ||
+                settings.AWSSecretAccessKey != this._awsSecretKey ||
+                settings.S3Bucket != this.S3BucketName.Text)
+                return true;
+            else
+                return false;
+        }
+
         private void Save_Click(object sender, EventArgs e)
         {
             try
             {
-                FileManager.SaveSettings(new DestinationSettings
-                {
-                    ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
-                    AWSAccessKeyID = this.IsS3Bucket.Checked ? this.AWSAccessKey.Text : "",
-                    AWSProfileName = this.IsS3Bucket.Checked ? this.AWSProfileName.Text : "",
-                    AWSSecretAccessKey = this.IsS3Bucket.Checked ? this._awsSecretKey : "",
-                    S3Bucket = this.IsS3Bucket.Checked ? this.S3BucketName.Text : ""
-                });
-                this.Close();
+                SaveSettings();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "An Error Occurred");
             }
+        }
+
+        private void SaveSettings()
+        {
+            Debug.WriteLine("SaveSettings");
+            this.settings = new DestinationSettings
+            {
+                ArchiveDirectory = this.IsFileSystem.Checked ? this.ArchivePath.Text : "",
+                AWSAccessKeyID = this.IsS3Bucket.Checked ? this.AWSAccessKey.Text : "",
+                AWSSecretAccessKey = this.IsS3Bucket.Checked ? this._awsSecretKey : "",
+                S3Bucket = this.IsS3Bucket.Checked ? this.S3BucketName.Text : ""
+            };
+            FileManager.SaveSettings(this.settings);
+            PopulateControls();
+            this.Close();
+        }
+
+        private void MoreOptions_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

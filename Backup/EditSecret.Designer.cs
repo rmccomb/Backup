@@ -40,13 +40,14 @@
             this.Commit.Location = new System.Drawing.Point(255, 52);
             this.Commit.Name = "Commit";
             this.Commit.Size = new System.Drawing.Size(75, 23);
-            this.Commit.TabIndex = 8;
+            this.Commit.TabIndex = 1;
             this.Commit.Text = "OK";
             this.Commit.UseVisualStyleBackColor = true;
             this.Commit.Click += new System.EventHandler(this.Commit_Click);
             // 
             // Cancel
             // 
+            this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.Cancel.Location = new System.Drawing.Point(337, 52);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
@@ -69,20 +70,26 @@
             this.SecretID.Location = new System.Drawing.Point(88, 17);
             this.SecretID.Name = "SecretID";
             this.SecretID.Size = new System.Drawing.Size(324, 20);
-            this.SecretID.TabIndex = 10;
+            this.SecretID.TabIndex = 0;
             // 
             // EditSecret
             // 
+            this.AcceptButton = this.Commit;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(434, 93);
-            this.Controls.Add(this.SecretID);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.Commit);
             this.Controls.Add(this.Cancel);
+            this.Controls.Add(this.SecretID);
+            this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditSecret";
             this.Text = "Add AWS Profile Secret Access Key";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 

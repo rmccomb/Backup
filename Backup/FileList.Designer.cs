@@ -99,6 +99,7 @@
             // CloseForm
             // 
             this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.CloseForm.Location = new System.Drawing.Point(794, 477);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
@@ -133,14 +134,19 @@
             // 
             // FileList
             // 
+            this.AcceptButton = this.Backup;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.CloseForm;
             this.ClientSize = new System.Drawing.Size(899, 522);
             this.Controls.Add(this.Backup);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.Message);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "FileList";
             this.Text = "Discover Files";
             this.groupBox1.ResumeLayout(false);

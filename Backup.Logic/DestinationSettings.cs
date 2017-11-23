@@ -12,7 +12,6 @@ namespace Backup.Logic
     {
         public string ArchiveDirectory { get; set; }
         public string S3Bucket { get; set; }
-        public string AWSProfileName { get; set; }
         public string AWSAccessKeyID { get; set; }
         public string AWSSecretAccessKey { get; set; }
     }

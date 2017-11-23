@@ -26,7 +26,7 @@ namespace Backup.Test
 
             // Iterate discovered files and copy while updating status of file in list
             var archive = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive";
-            FileManager.DoBackup(archive);
+            FileManager.CopyFiles(archive);
 
             FileManager.UpdateTimestamp(sources);
         }
@@ -44,7 +44,6 @@ namespace Backup.Test
             var settings = new DestinationSettings
             {
                 ArchiveDirectory = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive",
-                AWSProfileName = "default",
                 AWSAccessKeyID = "AKIAIK5CONHAOVWPN27Q",
                 AWSSecretAccessKey = "test123",
                 S3Bucket = "backup.tiz.digital"
@@ -54,7 +53,6 @@ namespace Backup.Test
             var loaded = FileManager.GetSettings();
             Assert.AreEqual(loaded.ArchiveDirectory, settings.ArchiveDirectory);
             Assert.AreEqual(loaded.AWSAccessKeyID, settings.AWSAccessKeyID);
-            Assert.AreEqual(loaded.AWSProfileName, settings.AWSProfileName);
             Assert.AreEqual(loaded.AWSSecretAccessKey, settings.AWSSecretAccessKey);
 
         }

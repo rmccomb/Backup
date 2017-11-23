@@ -8,16 +8,12 @@ namespace Backup
 {
     public partial class ConfigureForm : Form
     {
-        //private List<Source> _sources;
-        //private DestinationSettings _settings;
-        //private string _awsSecretKey;
-        FileList fileListDlg;
+        FileListForm fileListForm;
         DestinationForm destForm;
 
         public ConfigureForm()
         {
             InitializeComponent();
-            
             PopulateControls();
         }
         
@@ -101,72 +97,20 @@ namespace Backup
             FileManager.SaveSources(toSave);
         }
 
-        //private void Browse_Click(object sender, EventArgs e)
-        //{
-        //    var result = this.folderBrowserDialog1.ShowDialog();
-        //    if (result == DialogResult.OK)
-        //        this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
-        //}
-
-        //private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
-        //{
-        //    if (this.IsFileSystem.Checked)
-        //    {
-        //        this.ArchivePath.Enabled = true;
-        //        this.Browse.Enabled = true;
-        //    }
-        //    else
-        //    {
-        //        this.ArchivePath.Enabled = false;
-        //        this.Browse.Enabled = false;
-        //    }
-        //}
-
-        //private void IsS3Bucket_CheckedChanged(object sender, EventArgs e)
-        //{
-        //    if (this.IsS3Bucket.Checked)
-        //    {
-        //        this.S3BucketName.Enabled = true;
-        //        this.AWSProfileName.Enabled = true;
-        //        this.AWSAccessKey.Enabled = true;
-        //        this.AddSecret.Enabled = true;
-        //    }
-        //    else
-        //    {
-        //        this.S3BucketName.Enabled = false;
-        //        this.AWSProfileName.Enabled = false;
-        //        this.AWSAccessKey.Enabled = false;
-        //        this.AddSecret.Enabled = false;
-        //    }
-        //}
-
-        //private void AddSecret_Click(object sender, EventArgs e)
-        //{
-        //    var dlg = new EditSecret();
-        //    var result = dlg.ShowDialog();
-        //    if (result == DialogResult.OK)
-        //    {
-        //        this._awsSecretKey = dlg.Secret;
-        //    }
-        //    else
-        //    {
-        //        this._awsSecretKey = "";
-        //    }
-        //}
-
         private void Discover_Click(object sender, EventArgs e)
         {
-            if (this.fileListDlg == null)
+            if (this.fileListForm == null)
             {
-                this.fileListDlg = new FileList();
-                this.fileListDlg.FormClosed += FileList_FormClosed;
-                this.fileListDlg.ShowDialog();
+                this.fileListForm = new FileListForm();
+                this.fileListForm.FormClosed += FileList_FormClosed;
+                this.fileListForm.ShowDialog();
             }
         }
 
         private void FileList_FormClosed(object sender, FormClosedEventArgs e)
         {
-            this.fileListDlg = null;
+            this.fileListForm = null;
+            this.PopulateControls();
         }
 
         private void Close_Click(object sender, EventArgs e)

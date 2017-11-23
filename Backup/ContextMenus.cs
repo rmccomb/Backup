@@ -11,8 +11,8 @@ namespace Backup
     /// </summary>
     public class ContextMenus
     {
-        ConfigureForm config;
-        FileList fileList;
+        ConfigureForm configForm;
+        FileListForm fileListForm;
 
         public ContextMenuStrip Create()
         {
@@ -49,24 +49,24 @@ namespace Backup
 
         private void Configure_Click(object sender, EventArgs e)
         {
-            if (this.config == null)
+            if (this.configForm == null)
             {
-                this.config = new ConfigureForm();
-                this.config.FormClosed += Config_FormClosed;
-                this.config.ShowDialog();
+                this.configForm = new ConfigureForm();
+                this.configForm.FormClosed += Config_FormClosed;
+                this.configForm.ShowDialog();
             }
         }
 
         private void Config_FormClosed(object sender, FormClosedEventArgs e)
         {
-            this.config = null;
+            this.configForm = null;
         }
 
         private void Backup_Click(object sender, EventArgs e)
         {
             try
             {
-                FileManager.ProcessBackup();
+                FileManager.InvokeBackup();
             }
             catch (Exception ex)
             {
@@ -76,17 +76,17 @@ namespace Backup
 
         private void Discover_Click(object sender, EventArgs e)
         {
-            if (this.fileList == null)
+            if (this.fileListForm == null)
             {
-                this.fileList = new FileList();
-                this.fileList.FormClosed += FileList_FormClosed;
-                this.fileList.ShowDialog();
+                this.fileListForm = new FileListForm();
+                this.fileListForm.FormClosed += FileList_FormClosed;
+                this.fileListForm.ShowDialog();
             }
         }
 
         private void FileList_FormClosed(object sender, FormClosedEventArgs e)
         {
-            this.fileList = null;
+            this.fileListForm = null;
         }
 
         private void Exit_Click(object sender, EventArgs e)

@@ -125,6 +125,7 @@
             // 
             // CloseForm
             // 
+            this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.CloseForm.Location = new System.Drawing.Point(519, 254);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
@@ -158,15 +159,19 @@
             // 
             // ConfigureForm
             // 
+            this.AcceptButton = this.CloseForm;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.CloseForm;
             this.ClientSize = new System.Drawing.Size(624, 293);
             this.Controls.Add(this.BackupDestination);
             this.Controls.Add(this.Discover);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.groupBox1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "ConfigureForm";
             this.Text = "Configure";
             this.groupBox1.ResumeLayout(false);

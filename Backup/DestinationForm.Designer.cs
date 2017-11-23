@@ -32,9 +32,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.AddSecret = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.AWSAccessKey = new System.Windows.Forms.TextBox();
-            this.AWSProfileName = new System.Windows.Forms.TextBox();
             this.S3BucketName = new System.Windows.Forms.TextBox();
             this.Browse = new System.Windows.Forms.Button();
             this.ArchivePath = new System.Windows.Forms.TextBox();
@@ -42,6 +40,8 @@
             this.IsFileSystem = new System.Windows.Forms.CheckBox();
             this.CloseForm = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.Cancel = new System.Windows.Forms.Button();
+            this.MoreOptions = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -49,9 +49,7 @@
             // 
             this.groupBox2.Controls.Add(this.AddSecret);
             this.groupBox2.Controls.Add(this.label2);
-            this.groupBox2.Controls.Add(this.label1);
             this.groupBox2.Controls.Add(this.AWSAccessKey);
-            this.groupBox2.Controls.Add(this.AWSProfileName);
             this.groupBox2.Controls.Add(this.S3BucketName);
             this.groupBox2.Controls.Add(this.Browse);
             this.groupBox2.Controls.Add(this.ArchivePath);
@@ -62,12 +60,12 @@
             this.groupBox2.Size = new System.Drawing.Size(600, 196);
             this.groupBox2.TabIndex = 9;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Backup Destination";
+            this.groupBox2.Text = "Destination";
             // 
             // AddSecret
             // 
             this.AddSecret.Enabled = false;
-            this.AddSecret.Location = new System.Drawing.Point(459, 160);
+            this.AddSecret.Location = new System.Drawing.Point(459, 133);
             this.AddSecret.Name = "AddSecret";
             this.AddSecret.Size = new System.Drawing.Size(125, 23);
             this.AddSecret.TabIndex = 15;
@@ -78,36 +76,19 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(350, 137);
+            this.label2.Location = new System.Drawing.Point(56, 138);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(66, 13);
+            this.label2.Size = new System.Drawing.Size(80, 13);
             this.label2.TabIndex = 14;
-            this.label2.Text = "Access Key:";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(35, 137);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(98, 13);
-            this.label1.TabIndex = 13;
-            this.label1.Text = "AWS Profile Name:";
+            this.label2.Text = "Access Key ID:";
             // 
             // AWSAccessKey
             // 
             this.AWSAccessKey.Enabled = false;
-            this.AWSAccessKey.Location = new System.Drawing.Point(423, 134);
+            this.AWSAccessKey.Location = new System.Drawing.Point(150, 135);
             this.AWSAccessKey.Name = "AWSAccessKey";
-            this.AWSAccessKey.Size = new System.Drawing.Size(161, 20);
+            this.AWSAccessKey.Size = new System.Drawing.Size(265, 20);
             this.AWSAccessKey.TabIndex = 12;
-            // 
-            // AWSProfileName
-            // 
-            this.AWSProfileName.Enabled = false;
-            this.AWSProfileName.Location = new System.Drawing.Point(150, 134);
-            this.AWSProfileName.Name = "AWSProfileName";
-            this.AWSProfileName.Size = new System.Drawing.Size(161, 20);
-            this.AWSProfileName.TabIndex = 11;
             // 
             // S3BucketName
             // 
@@ -141,9 +122,9 @@
             this.IsS3Bucket.AutoSize = true;
             this.IsS3Bucket.Location = new System.Drawing.Point(16, 107);
             this.IsS3Bucket.Name = "IsS3Bucket";
-            this.IsS3Bucket.Size = new System.Drawing.Size(117, 17);
+            this.IsS3Bucket.Size = new System.Drawing.Size(120, 17);
             this.IsS3Bucket.TabIndex = 8;
-            this.IsS3Bucket.Text = "Amazon S3 Bucket";
+            this.IsS3Bucket.Text = "Amazon S3 Bucket:";
             this.IsS3Bucket.UseVisualStyleBackColor = true;
             this.IsS3Bucket.CheckedChanged += new System.EventHandler(this.IsS3Bucket_CheckedChanged);
             // 
@@ -152,32 +133,59 @@
             this.IsFileSystem.AutoSize = true;
             this.IsFileSystem.Location = new System.Drawing.Point(16, 26);
             this.IsFileSystem.Name = "IsFileSystem";
-            this.IsFileSystem.Size = new System.Drawing.Size(79, 17);
+            this.IsFileSystem.Size = new System.Drawing.Size(82, 17);
             this.IsFileSystem.TabIndex = 7;
-            this.IsFileSystem.Text = "File System";
+            this.IsFileSystem.Text = "File System:";
             this.IsFileSystem.UseVisualStyleBackColor = true;
             this.IsFileSystem.CheckedChanged += new System.EventHandler(this.IsFileSystem_CheckedChanged);
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(521, 222);
+            this.CloseForm.Location = new System.Drawing.Point(435, 226);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
-            this.CloseForm.Text = "Close";
+            this.CloseForm.Text = "Commit";
             this.CloseForm.UseVisualStyleBackColor = true;
             this.CloseForm.Click += new System.EventHandler(this.Save_Click);
             // 
+            // Cancel
+            // 
+            this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.Cancel.Location = new System.Drawing.Point(521, 226);
+            this.Cancel.Name = "Cancel";
+            this.Cancel.Size = new System.Drawing.Size(75, 23);
+            this.Cancel.TabIndex = 11;
+            this.Cancel.Text = "Cancel";
+            this.Cancel.UseVisualStyleBackColor = true;
+            // 
+            // MoreOptions
+            // 
+            this.MoreOptions.Location = new System.Drawing.Point(28, 226);
+            this.MoreOptions.Name = "MoreOptions";
+            this.MoreOptions.Size = new System.Drawing.Size(120, 23);
+            this.MoreOptions.TabIndex = 12;
+            this.MoreOptions.Text = "More Options...";
+            this.MoreOptions.UseVisualStyleBackColor = true;
+            this.MoreOptions.Click += new System.EventHandler(this.MoreOptions_Click);
+            // 
             // DestinationForm
             // 
+            this.AcceptButton = this.CloseForm;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(621, 261);
+            this.Controls.Add(this.MoreOptions);
+            this.Controls.Add(this.Cancel);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.groupBox2);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "DestinationForm";
-            this.Text = "Backup Destination";
+            this.Text = "Destination of Backup";
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
@@ -189,9 +197,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button AddSecret;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox AWSAccessKey;
-        private System.Windows.Forms.TextBox AWSProfileName;
         private System.Windows.Forms.TextBox S3BucketName;
         private System.Windows.Forms.Button Browse;
         private System.Windows.Forms.TextBox ArchivePath;
@@ -199,5 +205,7 @@
         private System.Windows.Forms.CheckBox IsFileSystem;
         private System.Windows.Forms.Button CloseForm;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+        private System.Windows.Forms.Button Cancel;
+        private System.Windows.Forms.Button MoreOptions;
     }
 }

@@ -42,7 +42,7 @@ namespace Backup
 
         private void Backup_Click(object sender, EventArgs e)
         {
-            FileManager.ProcessBackup();
+            FileManager.InvokeBackup();
             this.Close();
         }
 

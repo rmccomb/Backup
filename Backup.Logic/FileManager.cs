@@ -1,8 +1,12 @@
-﻿using System;
+﻿using Amazon;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -13,6 +17,7 @@ namespace Backup.Logic
         // The name of the setting folder
         public const string SettingsFolder = ".bbackup";
         public const string SettingsName = "bbackup.settings.bin";
+        public const string ArchiveFolder = "Archive"; // Default folder in the case of the user not setting one
 
         // App.config settings keys
         public const string TempDirKey = "tempDir"; // The location of SettingsFolder
@@ -93,10 +98,11 @@ namespace Backup.Logic
             CreateSourcesFile();
             var lines = File.ReadAllLines(Path.Combine(GetTempDirectory(), SourcesName)).Skip(1);
             return new List<Source>(
-                (from l in lines select new Source(
-                        path: l.Split(',')[0].Trim(),
-                        pattern: l.Split(',')[1].Trim(),
-                        lastBackup: DateTime.Parse(l.Split(',')[2].Trim()))
+                (from l in lines
+                 select new Source(
+                    path: l.Split(',')[0].Trim(),
+                    pattern: l.Split(',')[1].Trim(),
+                    lastBackup: DateTime.Parse(l.Split(',')[2].Trim()))
                  ));
         }
 
@@ -145,7 +151,7 @@ namespace Backup.Logic
             {
                 var lastWrite = File.GetLastWriteTime(file);
                 if (fromDate < lastWrite)
-                    changed.Add(new FileDetail(file,directory));
+                    changed.Add(new FileDetail(file, directory));
             }
 
             return changed;
@@ -190,16 +196,16 @@ namespace Backup.Logic
         }
 
         /// <summary>
-        /// Invoke the whole backup process
+        /// Invoke the whole backup process - get sources, discover files, copy to destination
         /// </summary>
-        static public void ProcessBackup()
+        static public void InvokeBackup()
         {
             try
             {
                 var sources = GetSources();
                 var files = DiscoverFiles(sources);
                 SaveDiscoveredFiles(files);
-                DoBackup();
+                CopyFiles();
                 UpdateTimestamp(sources);
             }
             catch (Exception ex)
@@ -213,7 +219,7 @@ namespace Backup.Logic
         /// Do the backing up of the discovered files
         /// </summary>
         /// <param name="archiveDir">A directory to backup to</param>
-        static public void DoBackup(string archiveDir = null)
+        static public void CopyFiles(string archiveDir = null)
         {
             var settings = GetSettings();
             var tempDir = GetTempDirectory();
@@ -230,50 +236,145 @@ namespace Backup.Logic
             if (archiveDir == null)
                 archiveDir = settings.ArchiveDirectory;
 
-            if (!String.IsNullOrEmpty(archiveDir))
+            // Has user set an archive folder?
+            if (String.IsNullOrEmpty(archiveDir))
+                archiveDir = Path.Combine(tempDir, ArchiveFolder);
+
+            // Make the archive
+            var zipArchivePath = DoCopy(archiveDir, files);
+
+            // Upload the zip archive
+            if (!String.IsNullOrEmpty(settings.S3Bucket))
             {
-                int fileCount = 0;
-                // Create processing file and copy logging files to processing file
-                var processing = Path.Combine(tempDir, ProcessingName);
-                using (var processWriter = File.CreateText(processing))
+                UploadArchive(settings, zipArchivePath);
+
+                BackupSuccess?.Invoke($"Backup uploaded archive to Bucket ({settings.S3Bucket})");
+
+                // Clean up if the user didn't want the File System option
+                if (String.IsNullOrEmpty(settings.ArchiveDirectory))
                 {
-                    foreach (var file in files)
-                    {
-                        try
-                        {
-                            // Copy file and append to processing file
-                            var filepath = (from f in file.Split(',') select f.Trim()).First();
-                            var subpath = (from f in file.Split(',') select f.Trim()).Last();
-
-                            // Create the subpath in archive
-                            var splits = subpath.Split('\\');
-                            var subpathDir = "";
-                            for (int i = 0; i < splits.Length - 1; i++)
-                                subpathDir += "\\" + splits[i];
-
-                            var newDir = Path.Combine(archiveDir, subpathDir.TrimStart('\\'));
-                            var di = Directory.CreateDirectory(newDir);
-                            Debug.Write(di);
-
-                            File.Copy(filepath, Path.Combine(archiveDir, subpath.TrimStart('\\')), true);
-                            processWriter.WriteLine(file);
-                            fileCount++;
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex);
-                            //throw ex;
-                            BackupError(ex.Message);
-                        }
-                    }
+                    File.Delete(zipArchivePath);
                 }
+            }
+        }
 
-                BackupSuccess?.Invoke($"Backup copied {fileCount} files to archive");
-            }
-            else
+        private static void UploadArchive(DestinationSettings settings, string zipPath)
+        {
+            var region = RegionEndpoint.APSoutheast2; // TODO put in settings?
+            var transferUtility = new TransferUtility(
+                settings.AWSAccessKeyID, settings.AWSSecretAccessKey, region);
+
+            // Create bucket if not found
+            if (!transferUtility.S3Client.DoesS3BucketExist(settings.S3Bucket))
             {
-                BackupWarning?.Invoke("No archive directory is defined, no files were backed up");
+                transferUtility.S3Client.PutBucket(
+                    new PutBucketRequest() { BucketName = settings.S3Bucket });
             }
+
+            try
+            {
+                // Copy zipfile 
+                var request = new TransferUtilityUploadRequest
+                {
+                    BucketName = settings.S3Bucket,
+                    FilePath = zipPath,
+                    //StorageClass // TODO
+                };
+                request.UploadProgressEvent += Request_UploadProgressEvent;
+                transferUtility.Upload(request);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private static string DoCopy(string archiveDir, string[] files)
+        {
+            int fileCount = 0;
+            // Create processing file and copy logging files to processing file
+            //var processing = Path.Combine(tempDir, ProcessingName);
+            //using (var processWriter = File.CreateText(processing))
+            //{
+            var uniqueArchiveDir = GetArchiveUniqueName(archiveDir);
+
+            foreach (var line in files)
+            {
+                try
+                {
+                    // Copy file and append to processing file
+                    var filepath = (from f in line.Split(',') select f.Trim()).First();
+                    var subpath = (from f in line.Split(',') select f.Trim()).Last();
+
+                    // Create the subpath in archive
+                    var splits = subpath.Split('\\');
+                    var subpathDir = "";
+                    for (int i = 0; i < splits.Length - 1; i++)
+                        subpathDir += "\\" + splits[i];
+
+                    var newDir = Path.Combine(uniqueArchiveDir, subpathDir.TrimStart('\\'));
+                    var di = Directory.CreateDirectory(newDir);
+                    Debug.Write(di);
+
+                    File.Copy(filepath, Path.Combine(uniqueArchiveDir, subpath.TrimStart('\\')), true);
+                    fileCount++;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    throw ex;
+                }
+            }
+
+            if (fileCount > 0)
+            {
+                try
+                {
+                    var zipFileArchive = $"{uniqueArchiveDir}.zip";
+
+                    ZipFile.CreateFromDirectory(uniqueArchiveDir, zipFileArchive, CompressionLevel.Optimal, false);
+
+                    // Clean up folders used to make the archive
+                    DeleteZipSource(uniqueArchiveDir);
+
+                    BackupSuccess?.Invoke($"{fileCount} file {(fileCount == 1 ? String.Empty : "s")} copied to {zipFileArchive}");
+                    return zipFileArchive;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    throw ex;
+                }
+            }
+
+            return null;
+        }
+
+        private static void DeleteZipSource(string zipSource)
+        {
+            DeleteFolderContents(zipSource);
+        }
+
+        private static void DeleteFolderContents(string folder)
+        {
+            var files = Directory.EnumerateFiles(folder);
+            foreach (var file in files)
+                File.Delete(file);
+
+            var dirs = Directory.EnumerateDirectories(folder);
+            foreach (var dir in dirs)
+            {
+                if (Directory.EnumerateFiles(dir).Count() == 0)
+                    Directory.Delete(dir);
+                else
+                    DeleteFolderContents(dir);
+            }
+            Directory.Delete(folder);
+        }
+
+        static public string GetArchiveUniqueName(string archiveDir = null)
+        {
+            return Path.Combine(archiveDir, $"archive_{DateTime.Now.ToString("yyyy-MM-dd_HHmmss")}");
         }
 
         /// <summary>
@@ -283,6 +384,11 @@ namespace Backup.Logic
         {
             sources.ForEach(s => s.LastBackup = DateTime.Now);
             SaveSources(sources);
+        }
+
+        private static void Request_UploadProgressEvent(object sender, UploadProgressArgs e)
+        {
+            Debug.WriteLine($"{e.PercentDone}% done");
         }
     }
 }

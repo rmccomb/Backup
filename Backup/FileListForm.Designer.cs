@@ -51,7 +51,7 @@
             this.groupBox1.Controls.Add(this.FilesList);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(875, 443);
+            this.groupBox1.Size = new System.Drawing.Size(875, 458);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Files to include in backup";
@@ -66,7 +66,7 @@
             this.subpath});
             this.FilesList.Location = new System.Drawing.Point(6, 19);
             this.FilesList.Name = "FilesList";
-            this.FilesList.Size = new System.Drawing.Size(863, 418);
+            this.FilesList.Size = new System.Drawing.Size(863, 433);
             this.FilesList.TabIndex = 0;
             this.FilesList.UseCompatibleStateImageBehavior = false;
             this.FilesList.View = System.Windows.Forms.View.Details;
@@ -87,7 +87,7 @@
             this.Backup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Backup.Image = global::Backup.Properties.Resources.Open_16x;
             this.Backup.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.Backup.Location = new System.Drawing.Point(710, 477);
+            this.Backup.Location = new System.Drawing.Point(712, 479);
             this.Backup.Name = "Backup";
             this.Backup.Size = new System.Drawing.Size(75, 23);
             this.Backup.TabIndex = 0;
@@ -100,7 +100,7 @@
             // 
             this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(794, 477);
+            this.CloseForm.Location = new System.Drawing.Point(806, 479);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 7;
@@ -126,19 +126,19 @@
             // 
             this.Message.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Message.AutoSize = true;
-            this.Message.Location = new System.Drawing.Point(18, 477);
+            this.Message.Location = new System.Drawing.Point(15, 484);
             this.Message.Name = "Message";
             this.Message.Size = new System.Drawing.Size(56, 13);
             this.Message.TabIndex = 8;
             this.Message.Text = "[Message]";
             // 
-            // FileList
+            // FileListForm
             // 
             this.AcceptButton = this.Backup;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.CloseForm;
-            this.ClientSize = new System.Drawing.Size(899, 522);
+            this.ClientSize = new System.Drawing.Size(899, 514);
             this.Controls.Add(this.Backup);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.Message);
@@ -147,7 +147,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "FileList";
+            this.Name = "FileListForm";
             this.Text = "Discover Files";
             this.groupBox1.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);

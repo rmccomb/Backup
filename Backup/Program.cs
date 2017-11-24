@@ -26,6 +26,11 @@ namespace Backup
             // Show the system tray icon.
             var processIcon = new ProcessIcon();
             processIcon.Display();
+
+            // Run backup on start if configured
+            if (FileManager.GetSettings().CreateBackupOnStart)
+                FileManager.InvokeBackup();
+
             Application.Run();
         }
         

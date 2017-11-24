@@ -89,7 +89,6 @@
             this.MinimizeBox = false;
             this.Name = "EditSecret";
             this.Text = "Add AWS Profile Secret Access Key";
-            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 

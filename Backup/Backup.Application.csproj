@@ -143,12 +143,13 @@
     <None Include="Resources\Property_16x.png" />
     <None Include="Resources\Open_16x.png" />
     <None Include="Resources\Open.ico" />
+    <None Include="Resources\Cloud_16x.png" />
     <Content Include="Resources\Property.ico" />
     <Content Include="Resources\Save.ico" />
     <None Include="Resources\StartPoint_16x.png" />
-    <None Include="Resources\SearchGo_16x_blue.png" />
     <None Include="Resources\Synchronize_16x.png" />
     <None Include="Resources\save_16xMD.png" />
+    <None Include="Resources\Time_16x.png" />
     <Content Include="_TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

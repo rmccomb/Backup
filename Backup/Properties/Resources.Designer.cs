@@ -61,6 +61,16 @@ namespace Backup.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Cloud_16x {
+            get {
+                object obj = ResourceManager.GetObject("Cloud_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon Open {
@@ -123,16 +133,6 @@ namespace Backup.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap SearchGo_16x_blue {
-            get {
-                object obj = ResourceManager.GetObject("SearchGo_16x_blue", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap StartPoint_16x {
             get {
                 object obj = ResourceManager.GetObject("StartPoint_16x", resourceCulture);
@@ -146,6 +146,16 @@ namespace Backup.Properties {
         internal static System.Drawing.Bitmap Synchronize_16x {
             get {
                 object obj = ResourceManager.GetObject("Synchronize_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Time_16x {
+            get {
+                object obj = ResourceManager.GetObject("Time_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

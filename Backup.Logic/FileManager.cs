@@ -230,11 +230,15 @@ namespace Backup.Logic
                 BackupWarning?.Invoke("No new or modified files were discovered");
                 return; // Nothing to do
             }
-
             var files = File.ReadAllLines(filesName);
+            if (files.Length == 0)
+            {
+                BackupWarning?.Invoke("No new or modified files were discovered");
+                return; // Nothing to do
+            }
 
             if (archiveDir == null)
-                archiveDir = settings.ArchiveDirectory;
+                archiveDir = settings.FileSystemDirectory;
 
             // Has user set an archive folder?
             if (String.IsNullOrEmpty(archiveDir))
@@ -244,14 +248,14 @@ namespace Backup.Logic
             var zipArchivePath = DoCopy(archiveDir, files);
 
             // Upload the zip archive
-            if (!String.IsNullOrEmpty(settings.S3Bucket))
+            if (settings.IsS3BucketEnabled)
             {
                 UploadArchive(settings, zipArchivePath);
 
-                BackupSuccess?.Invoke($"Backup uploaded archive to Bucket ({settings.S3Bucket})");
+                BackupSuccess?.Invoke($"Backup uploaded to S3 Bucket {settings.S3Bucket}");
 
                 // Clean up if the user didn't want the File System option
-                if (String.IsNullOrEmpty(settings.ArchiveDirectory))
+                if (!settings.IsFileSystemEnabled)
                 {
                     File.Delete(zipArchivePath);
                 }
@@ -364,10 +368,14 @@ namespace Backup.Logic
             var dirs = Directory.EnumerateDirectories(folder);
             foreach (var dir in dirs)
             {
-                if (Directory.EnumerateFiles(dir).Count() == 0)
+                if (Directory.EnumerateFiles(dir).Count() == 0 && Directory.EnumerateDirectories(dir).Count() == 0)
+                {
                     Directory.Delete(dir);
+                }
                 else
+                {
                     DeleteFolderContents(dir);
+                }
             }
             Directory.Delete(folder);
         }

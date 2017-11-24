@@ -126,7 +126,7 @@
             // CloseForm
             // 
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(519, 254);
+            this.CloseForm.Location = new System.Drawing.Point(521, 255);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 5;
@@ -138,7 +138,7 @@
             // 
             this.Discover.Image = global::Backup.Properties.Resources.StartPoint_16x;
             this.Discover.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.Discover.Location = new System.Drawing.Point(18, 254);
+            this.Discover.Location = new System.Drawing.Point(20, 255);
             this.Discover.Name = "Discover";
             this.Discover.Size = new System.Drawing.Size(112, 23);
             this.Discover.TabIndex = 9;
@@ -149,11 +149,14 @@
             // 
             // BackupDestination
             // 
-            this.BackupDestination.Location = new System.Drawing.Point(151, 254);
+            this.BackupDestination.Image = global::Backup.Properties.Resources.Cloud_16x;
+            this.BackupDestination.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.BackupDestination.Location = new System.Drawing.Point(153, 255);
             this.BackupDestination.Name = "BackupDestination";
-            this.BackupDestination.Size = new System.Drawing.Size(131, 23);
+            this.BackupDestination.Size = new System.Drawing.Size(140, 23);
             this.BackupDestination.TabIndex = 10;
             this.BackupDestination.Text = "Backup Destination...";
+            this.BackupDestination.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.BackupDestination.UseVisualStyleBackColor = true;
             this.BackupDestination.Click += new System.EventHandler(this.BackupDestination_Click);
             // 
@@ -163,7 +166,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.CloseForm;
-            this.ClientSize = new System.Drawing.Size(624, 293);
+            this.ClientSize = new System.Drawing.Size(624, 292);
             this.Controls.Add(this.BackupDestination);
             this.Controls.Add(this.Discover);
             this.Controls.Add(this.CloseForm);

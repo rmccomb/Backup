@@ -43,18 +43,19 @@ namespace Backup.Test
         {
             var settings = new DestinationSettings
             {
-                ArchiveDirectory = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive",
+                FileSystemDirectory = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive",
                 AWSAccessKeyID = "AKIAIK5CONHAOVWPN27Q",
                 AWSSecretAccessKey = "test123",
-                S3Bucket = "backup.tiz.digital"
+                S3Bucket = "backup.tiz.digital",
+                CreateBackupOnStart = true
             };
             FileManager.SaveSettings(settings);
 
             var loaded = FileManager.GetSettings();
-            Assert.AreEqual(loaded.ArchiveDirectory, settings.ArchiveDirectory);
+            Assert.AreEqual(loaded.FileSystemDirectory, settings.FileSystemDirectory);
             Assert.AreEqual(loaded.AWSAccessKeyID, settings.AWSAccessKeyID);
             Assert.AreEqual(loaded.AWSSecretAccessKey, settings.AWSSecretAccessKey);
-
+            Assert.AreEqual(loaded.CreateBackupOnStart, settings.CreateBackupOnStart);
         }
     }
 }

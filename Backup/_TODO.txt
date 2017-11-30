@@ -1,9 +1,17 @@
-﻿STI commands
-- save secret and encrypt?
-
-Scheduled Task Setup
-- program starts on login
-- processes discovered files
+﻿Scheduled Task Setup
+- program starts on login - ok
+- processes discovered files - ok
 
 AWS
-- S3 bucket
+- S3 bucket - ok
+- Glacier
+- User defined Tags for S3 and Glacier
+- List of Archive zip files, option to retrieve
+- AWS Region
+
+GlacierBackupPolicy created for basic add, create, tag and delete archives and vaults.
+- backup-user granted policy
+
+
+Archive list - S3 ok
+Download function

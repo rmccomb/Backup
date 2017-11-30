@@ -19,10 +19,18 @@ namespace Backup.Logic
             set { this.fileSystemDirectory = value; }
         }
         public bool IsFileSystemEnabled { get; set; }
-        public string S3Bucket { get; set; }
+        public string AWSS3Bucket { get; set; }
         public bool IsS3BucketEnabled { get; set; }
+
+        public bool IsGlacierEnabled { get; set; }
+        public string GlacierVaultName { get; set; }
+
         public string AWSAccessKeyID { get; set; }
         public string AWSSecretAccessKey { get; set; }
+
         public bool CreateBackupOnStart { get; set; }
+        public AWSRegionEndPoint AWSS3Region { get; set; }
+        public AWSRegionEndPoint AWSGlacierRegion { get; set; }
+
     }
 }

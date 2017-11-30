@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using Backup.Properties;
 using Backup.Logic;
+using System.Diagnostics;
 
 namespace Backup
 {
@@ -17,21 +18,38 @@ namespace Backup
             notifyIcon = new NotifyIcon();
         }
 
+        ~ProcessIcon()
+        {
+            this.Dispose();
+        }
+
         public void Display()
         {
             // Put the icon in the system tray and allow it react to mouse clicks.          
-            notifyIcon.MouseClick += new MouseEventHandler(NotifyIcon_MouseClick);
+            //notifyIcon.MouseClick += new MouseEventHandler(NotifyIcon_MouseClick);
             notifyIcon.Icon = Resources.Save;
             notifyIcon.Text = "Backup Utility";
             notifyIcon.Visible = true;
 
             // Attach a context menu.
-            notifyIcon.ContextMenuStrip = new ContextMenus().Create();
+            notifyIcon.ContextMenuStrip = new ContextMenus().Create(notifyIcon);
 
-            // Attache event handlers
+            // Attach event handlers
             FileManager.BackupSuccess += FileManager_BackupSuccess;
             FileManager.BackupWarning += FileManager_BackupWarning;
             FileManager.BackupError += FileManager_BackupError;
+            FileManager.DownloadSuccess += FileManager_DownloadSuccess;
+            FileManager.DownloadError += FileManager_DownloadError;
+        }
+
+        private void FileManager_DownloadSuccess(string successMessage)
+        {
+            CreateNotifyInfo(successMessage);
+        }
+
+        private void FileManager_DownloadError(string errorMessage)
+        {
+            CreateNotifyError(errorMessage);
         }
 
         private void FileManager_BackupSuccess(string successMessage)
@@ -61,7 +79,9 @@ namespace Backup
 
         public void Dispose()
         {
+            Debug.WriteLine("Disposing");
             notifyIcon.Dispose();
+            notifyIcon = null;
         }
 
         internal void NotifyUser(string title, string message, ToolTipIcon icon)
@@ -69,13 +89,13 @@ namespace Backup
             notifyIcon.ShowBalloonTip(5000, title, message, icon);
         }
 
-        void NotifyIcon_MouseClick(object sender, MouseEventArgs e)
-        {
+        //void NotifyIcon_MouseClick(object sender, MouseEventArgs e)
+        //{
             //if (e.Button == MouseButtons.Left)
             //{
             //    System.Diagnostics.Process.Start("explorer", null);
             //}
-        }
+        //}
     }
 }
 

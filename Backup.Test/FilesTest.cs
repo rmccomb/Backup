@@ -46,7 +46,7 @@ namespace Backup.Test
                 FileSystemDirectory = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive",
                 AWSAccessKeyID = "AKIAIK5CONHAOVWPN27Q",
                 AWSSecretAccessKey = "test123",
-                S3Bucket = "backup.tiz.digital",
+                AWSS3Bucket = "backup.tiz.digital",
                 CreateBackupOnStart = true
             };
             FileManager.SaveSettings(settings);

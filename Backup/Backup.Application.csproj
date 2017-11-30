@@ -50,6 +50,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArchiveContentsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ArchiveContentsForm.Designer.cs">
+      <DependentUpon>ArchiveContentsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ConfigureForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -90,6 +96,9 @@
     <Compile Include="ProcessIcon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ArchiveContentsForm.resx">
+      <DependentUpon>ArchiveContentsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ConfigureForm.resx">
       <DependentUpon>ConfigureForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -113,6 +122,8 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Glacier Policy.json" />
+    <None Include="Properties\DataSources\Backup.Logic.AWSRegionEndPoint.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

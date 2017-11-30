@@ -12,7 +12,7 @@ using Amazon;
 namespace Backup.Test
 {
     [TestClass]
-    public class AWSClientTest
+    public class AWSS3ClientTest
     {
         const int FIVE_MINUTES = 5 * 60 * 1000;
         TransferUtility transferUtility;

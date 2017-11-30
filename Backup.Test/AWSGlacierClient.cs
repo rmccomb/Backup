@@ -16,8 +16,8 @@ namespace Backup.Test
         {
             var vaultName = "test";
             var archive = @"C:\Users\Rob\source\repos\Backup\archive\archive_2017-11-24_122504.zip";
-            var andrew = "AKIAIRX74WNGPZPQH7LA";
-            var secret = "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";
+            var andrew = "";
+            var secret = "";
 
             var manager = new ArchiveTransferManager(andrew, secret, Amazon.RegionEndpoint.USEast1);
 
@@ -31,8 +31,8 @@ namespace Backup.Test
         {
             var vaultName = "test";
             var archiveId = "PJN_XpM9iRZJM_NFYrFjJz1TD2 - nTzzF1uQS5aSNe0P7ThyyAGb8YWuNspfFYB4XlkbLka7wFtfURrJ5n17iRbNbgfprN7_9Fup3bgEG48YXjV - 0Ywi0XBGtRpc5siqjXB8EFB55Pg";
-            var andrew = "AKIAIRX74WNGPZPQH7LA";
-            var secret = "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";
+            var andrew = "";
+            var secret = "";
             var downloadFilePath = @"C:\Users\Rob\source\repos\Backup\archive\glacier.zip";
             try
             {

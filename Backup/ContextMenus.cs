@@ -13,10 +13,12 @@ namespace Backup
     {
         ConfigureForm configForm;
         FileListForm fileListForm;
+        NotifyIcon icon;
 
-        public ContextMenuStrip Create()
+        public ContextMenuStrip Create(NotifyIcon icon)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
+            this.icon = icon;
 
             var item = new ToolStripMenuItem();
             item.Text = "Discover files...";
@@ -91,6 +93,7 @@ namespace Backup
 
         private void Exit_Click(object sender, EventArgs e)
         {
+            this.icon.Visible = false;
             Application.Exit();
         }
     }

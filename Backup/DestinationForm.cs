@@ -1,6 +1,7 @@
 ﻿using Backup.Logic;
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Backup
@@ -24,7 +25,10 @@ namespace Backup
                 var dlg = new MessageForm("Commit changes?", "Confirm Close");
                 var result = dlg.ShowDialog(this);
                 if (result == DialogResult.Yes)
-                    SaveSettings(true);
+                {
+                    SaveSettings();
+                    this.Close();
+                }
             }
         }
 
@@ -39,14 +43,25 @@ namespace Backup
 
         private void PopulateControls()
         {
+            this.aWSRegionEndPointBindingSource.DataSource = AWSHelper.GetAllRegions();
+
             this.settings = FileManager.GetSettings();
 
             ArchivePath.Text = settings.FileSystemDirectory;
-            S3BucketName.Text = settings.S3Bucket;
+            IsFileSystem.Checked = settings.IsFileSystemEnabled;
+
+            S3BucketName.Text = settings.AWSS3Bucket;
+            IsS3Bucket.Checked = settings.IsS3BucketEnabled;
+            S3Region.SelectedValue = settings.AWSS3Region == null ? settings.AWSS3Region.SystemName 
+                : AWSHelper.GetDefaultRegionSystemName();
+
+            GlacierVaultName.Text = settings.GlacierVaultName;
+            IsGlacier.Checked = settings.IsGlacierEnabled;
+            GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName 
+                : AWSHelper.GetDefaultRegionSystemName();
+
             AWSAccessKey.Text = settings.AWSAccessKeyID;
             _awsSecretKey = settings.AWSSecretAccessKey;
-            IsFileSystem.Checked = settings.IsFileSystemEnabled;
-            IsS3Bucket.Checked = settings.IsS3BucketEnabled;
 
             CreateOnStart.Checked = settings.CreateBackupOnStart;
         }
@@ -70,14 +85,42 @@ namespace Backup
             if (this.IsS3Bucket.Checked)
             {
                 this.S3BucketName.Enabled = true;
+                this.S3Region.Enabled = true;
                 this.AWSAccessKey.Enabled = true;
-                this.AddSecret.Enabled = true;
+                this.AddAWSSecret.Enabled = true;
             }
             else
             {
                 this.S3BucketName.Enabled = false;
+                this.S3Region.Enabled = false;
+            }
+
+            if (!this.IsS3Bucket.Checked && !this.IsGlacier.Checked)
+            {
                 this.AWSAccessKey.Enabled = false;
-                this.AddSecret.Enabled = false;
+                this.AddAWSSecret.Enabled = false;
+            }
+        }
+
+        private void IsGlacier_CheckedChanged(object sender, EventArgs e)
+        {
+            if (this.IsGlacier.Checked)
+            {
+                this.GlacierVaultName.Enabled = true;
+                this.GlacierRegion.Enabled = true;
+                this.AWSAccessKey.Enabled = true;
+                this.AddAWSSecret.Enabled = true;
+            }
+            else
+            {
+                this.GlacierVaultName.Enabled = false;
+                this.GlacierRegion.Enabled = false;
+            }
+            
+            if(!this.IsGlacier.Checked && !this.IsS3Bucket.Checked)
+            {
+                this.AWSAccessKey.Enabled = false;
+                this.AddAWSSecret.Enabled = false;
             }
         }
 
@@ -96,10 +139,14 @@ namespace Backup
             if (settings.FileSystemDirectory != this.ArchivePath.Text ||
                 settings.AWSAccessKeyID != this.AWSAccessKey.Text ||
                 settings.AWSSecretAccessKey != this._awsSecretKey ||
-                settings.S3Bucket != this.S3BucketName.Text ||
+                settings.AWSS3Bucket != this.S3BucketName.Text ||
                 settings.IsFileSystemEnabled != this.IsFileSystem.Checked ||
                 settings.IsS3BucketEnabled != this.IsS3Bucket.Checked ||
-                settings.CreateBackupOnStart != this.CreateOnStart.Checked)
+                settings.CreateBackupOnStart != this.CreateOnStart.Checked ||
+                settings.IsGlacierEnabled != this.IsGlacier.Checked ||
+                settings.GlacierVaultName != this.GlacierVaultName.Text ||
+                settings.AWSS3Region != (AWSRegionEndPoint)this.S3Region.SelectedItem ||
+                settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem)
                 return true;
             else
                 return false;
@@ -109,7 +156,8 @@ namespace Backup
         {
             try
             {
-                SaveSettings();
+                this.SaveSettings();
+                this.Close();
             }
             catch (Exception ex)
             {
@@ -117,22 +165,34 @@ namespace Backup
             }
         }
 
-        private void SaveSettings(bool isClosing = false)
+        private void SaveSettings()
         {
-            Debug.WriteLine("SaveSettings, closing:" + isClosing);
             this.settings = new DestinationSettings
             {
                 FileSystemDirectory = this.ArchivePath.Text,
                 IsFileSystemEnabled = this.IsFileSystem.Checked,
                 AWSAccessKeyID = this.AWSAccessKey.Text,
                 AWSSecretAccessKey = this._awsSecretKey,
-                S3Bucket = this.S3BucketName.Text,
+                AWSS3Bucket = this.S3BucketName.Text,
                 IsS3BucketEnabled = this.IsS3Bucket.Checked,
-                CreateBackupOnStart = this.CreateOnStart.Checked
+                AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem,
+                CreateBackupOnStart = this.CreateOnStart.Checked,
+                IsGlacierEnabled = this.IsGlacier.Checked,
+                GlacierVaultName = this.GlacierVaultName.Text,
+                AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem
             };
             FileManager.SaveSettings(this.settings);
             PopulateControls();
-            this.Close();
+        }
+
+        private void ListBucketContents_Click(object sender, EventArgs e)
+        {
+            this.SaveSettings();
+            var dlg = new ArchiveContentsForm
+            {
+                Text = this.settings.AWSS3Bucket
+            };
+            dlg.Show();
         }
     }
 }

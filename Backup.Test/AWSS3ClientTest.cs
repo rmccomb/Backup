@@ -41,8 +41,8 @@ namespace Backup.Test
         [TestMethod]
         public void ListBucketContents()
         {
-            var andrew = "AKIAIRX74WNGPZPQH7LA";
-            var secret = "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";
+            var andrew = "";
+            var secret = "";
 
             //this.bucket = "stuff.tiz.digital";
             AmazonS3Client client = new AmazonS3Client(andrew, secret, RegionEndpoint.APSoutheast2);

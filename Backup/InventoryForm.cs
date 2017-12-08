@@ -20,20 +20,18 @@ namespace Backup
             InitializeComponent();
 
             this.Message.Text = "Getting contents...";
-            this.Shown += ArchiveContentsForm_Shown;
+            this.Shown += InventoryForm_Shown;
         }
 
-        private async void ArchiveContentsForm_Shown(object sender, EventArgs e)
+        private async void InventoryForm_Shown(object sender, EventArgs e)
         {
             await PopulateControlsAsync();
         }
 
         private async Task PopulateControlsAsync()
         {
-            //this.FilesList.BeginUpdate();
-            //var files = await Task.Run(() => FileManager.GetBucketContents());
-            var files = await FileManager.GetBucketContentsAsync();
-            if (files == null || files.Count() == 0)
+            var inventory = await FileManager.GetInventoryAsync();
+            if (inventory == null)
             {
                 this.Message.Text = "";
                 this.FilesList.Items.Add(new ListViewItem("No new or changed files"));
@@ -41,13 +39,13 @@ namespace Backup
                 this.Download.Enabled = false;
                 return;
             }
-            foreach (var file in files)
+            foreach (var archive in inventory.ArchiveList)
             {
-                this.FilesList.Items.Add(new ListViewItem(new string[] { file }));
+                this.FilesList.Items.Add(new ListViewItem(new string[] { archive.ArchiveDescription, archive.Size.ToString() }));
             }
 
             //this.FilesList.EndUpdate();
-            this.Message.Text = $"{files.Count()} files have been found";
+            this.Message.Text = $"{inventory.ArchiveList.Count()} archives were been found";
         }
 
         private async void Download_Click(object sender, EventArgs e)

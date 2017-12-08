@@ -60,6 +60,7 @@
             this.GlacierVaultName = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.ListInventory = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).BeginInit();
@@ -275,6 +276,7 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.ListInventory);
             this.groupBox3.Controls.Add(this.GlacierRegion);
             this.groupBox3.Controls.Add(this.label8);
             this.groupBox3.Controls.Add(this.IsGlacierLabel);
@@ -357,6 +359,16 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "AWS Credentials";
             // 
+            // ListInventory
+            // 
+            this.ListInventory.Location = new System.Drawing.Point(429, 15);
+            this.ListInventory.Name = "ListInventory";
+            this.ListInventory.Size = new System.Drawing.Size(123, 23);
+            this.ListInventory.TabIndex = 20;
+            this.ListInventory.Text = "List Inventory...";
+            this.ListInventory.UseVisualStyleBackColor = true;
+            this.ListInventory.Click += new System.EventHandler(this.ListInventory_Click);
+            // 
             // DestinationForm
             // 
             this.AcceptButton = this.CloseForm;
@@ -423,5 +435,6 @@
         private System.Windows.Forms.ComboBox GlacierRegion;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.BindingSource aWSRegionEndPointBindingSource;
+        private System.Windows.Forms.Button ListInventory;
     }
 }

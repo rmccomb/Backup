@@ -1,4 +1,5 @@
 ﻿using Amazon;
+using Amazon.Glacier.Transfer;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
@@ -12,6 +13,8 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
+using System.Runtime.Serialization.Json;
 
 namespace Backup.Logic
 {
@@ -31,6 +34,7 @@ namespace Backup.Logic
         public const string ProcessingName = "bbackup.processing.dat";
         public const string CatalogName = "bbackup.catalog.dat";
         public const string DestinationsName = "bbackup.destinations.dat";
+        public const string InventoryName = "bbackup.inventory.json";
 
         // The list of target directories
         public const string SourcesName = "bbackup.sources.dat";
@@ -123,7 +127,7 @@ namespace Backup.Logic
         /// <summary>
         /// Get the objects (keys) in the S3 Bucket
         /// </summary>
-        static public IEnumerable<string> GetBucketContents()
+        static public async Task<IEnumerable<string>> GetBucketContentsAsync()
         {
             //System.Threading.Thread.Sleep(10000);
             var settings = GetSettings();
@@ -134,46 +138,33 @@ namespace Backup.Logic
                 RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
             // Issue call
-            ListBucketsResponse response = client.ListBuckets();
-
-            // View response data
-            //Debug.WriteLine($"Buckets owner - {response.Owner.DisplayName}");
-            //foreach (S3Bucket bucket in response.Buckets)
-            //{
-            //    Debug.WriteLine($"{bucket.BucketName}, Created {bucket.CreationDate}");
-            //}
+            //ListBucketsResponse response = client.ListBuckets();
 
             ListObjectsV2Request objRequest = new ListObjectsV2Request
             {
                 BucketName = settings.AWSS3Bucket
             };
 
-            ListObjectsV2Response objResponse = client.ListObjectsV2(objRequest);
+            ListObjectsV2Response objResponse = await client.ListObjectsV2Async(objRequest);
             return objResponse.S3Objects.Select(o => o.Key);
         }
 
-        /// <summary>
-        /// Download a selected S3 object
-        /// </summary>
-        public static void DownloadS3Archive(string downloadDir, string objectKey)
-        {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(ThreadedDownloadS3Object), 
-                new DownloadObjectInfo { Settings = GetSettings(), DownloadDirectory = downloadDir, ObjectKey = objectKey });
-        }
-
-        private static async void ThreadedDownloadS3Object(object state)
+        public static async Task DownloadS3ObjectAsync(string downloadDir, string objectKey)
         {
             try
             {
-                var settings = ((DownloadObjectInfo)state).Settings;
+                //Task t;
+                //await t.ConfigureAwait(false);
+                var settings = GetSettings();
+                var downloadInfo = new DownloadObjectInfo { DownloadDirectory = downloadDir, ObjectKey = objectKey };
                 AmazonS3Client client = new AmazonS3Client(
                     settings.AWSAccessKeyID,
                     settings.AWSSecretAccessKey,
                     RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
-                var request = new GetObjectRequest { BucketName = settings.AWSS3Bucket, Key = ((DownloadObjectInfo)state).ObjectKey};
+                var request = new GetObjectRequest { BucketName = settings.AWSS3Bucket, Key = objectKey};
                 var response = await client.GetObjectAsync(request);
-                SaveObject(response, (DownloadObjectInfo)state);
+                await SaveObjectAsync(response, downloadInfo);
             }
             catch (Exception ex)
             {
@@ -183,13 +174,43 @@ namespace Backup.Logic
             }
         }
 
-        private static void SaveObject(GetObjectResponse response, DownloadObjectInfo info)
+        private static async Task SaveObjectAsync(GetObjectResponse response, DownloadObjectInfo info)
         {
             response.WriteObjectProgressEvent += Response_WriteObjectProgressEvent;
             string checkedFilePath = CheckFilePath(info);
 
-            response.WriteResponseStreamToFileAsync(checkedFilePath, false, new CancellationToken());
+            await response.WriteResponseStreamToFileAsync(checkedFilePath, false, new CancellationToken());
             DownloadSuccess?.Invoke($"Backup downloaded {info.ObjectKey} to {Path.Combine(info.DownloadDirectory, checkedFilePath)}");
+        }
+
+        public static async Task<Inventory> GetInventoryAsync()
+        {
+            // Is there an inventory file?
+            // Yes: return Inventory
+            // Not found:
+            //   Is an inventory request issued?
+            //      Yes: poll topic for response
+            //      No: Issue request and save SNS topic, Job ID, Queue URL
+
+            // Poll Message received?
+            // Yes: deserialize to file and return Archive List part
+            // No: return details of inventory request        
+            ///////
+
+            var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
+            if (File.Exists(inventoryFile))
+            {
+                // Found inventory 
+                using (var file = File.Open(inventoryFile, FileMode.Open))
+                {
+                    var s = new DataContractJsonSerializer(typeof(Inventory));
+                    var inventory = (Inventory)s.ReadObject(file);
+                    Debug.WriteLine($"Archive ID: {inventory.ArchiveList[0].ArchiveId}");
+                    return inventory;
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         private static string CheckFilePath(DownloadObjectInfo info)
@@ -365,7 +386,7 @@ namespace Backup.Logic
             // Upload the zip archive
             if (settings.IsS3BucketEnabled)
             {
-                UploadArchive(settings, zipArchivePath);
+                UploadS3Archive(settings, zipArchivePath);
 
                 BackupSuccess?.Invoke($"Backup uploaded to S3 Bucket {settings.AWSS3Bucket}");
 
@@ -380,7 +401,7 @@ namespace Backup.Logic
             {
                 UploadGlacierArchive(settings, zipArchivePath);
 
-                BackupSuccess?.Invoke($"Backup uploaded to Glacier Vault {settings.GlacierVaultName}");
+                BackupSuccess?.Invoke($"Backup uploaded to Glacier Vault {settings.AWSGlacierVault}");
 
                 // Clean up if the user didn't want the File System option
                 if (!settings.IsFileSystemEnabled)
@@ -392,14 +413,41 @@ namespace Backup.Logic
 
         private static void UploadGlacierArchive(DestinationSettings settings, string zipArchivePath)
         {
-            throw new NotImplementedException();
+            var manager = new ArchiveTransferManager(
+                settings.AWSAccessKeyID,
+                settings.AWSSecretAccessKey, 
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+
+            var options = new UploadOptions();
+            options.StreamTransferProgress += FileManager.UploadGlacierProgress;
+
+            // Upload an archive.
+            string archiveId = manager.Upload(
+                settings.AWSGlacierVault, 
+                $"Backup @{DateTime.Now.ToString("yy-MM-dd HH-mm-ss")}", 
+                zipArchivePath, 
+                options).ArchiveId;
+
+            // TODO persist archive ID
+            Debug.WriteLine($"Archive ID: {archiveId}");
         }
 
-        private static void UploadArchive(DestinationSettings settings, string zipPath)
+        private static void UploadGlacierProgress(object sender, StreamTransferProgressArgs e)
         {
-            var region = RegionEndpoint.APSoutheast2; // TODO put in settings?
+            Debug.WriteLine($"Uploaded {e.PercentDone}");
+        }
+
+        public static void DownloadGlacierArchive(string downloadDir)
+        {
+
+        }
+
+        private static void UploadS3Archive(DestinationSettings settings, string zipPath)
+        {
             var transferUtility = new TransferUtility(
-                settings.AWSAccessKeyID, settings.AWSSecretAccessKey, region);
+                settings.AWSAccessKeyID, 
+                settings.AWSSecretAccessKey, 
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
             // Create bucket if not found
             if (!transferUtility.S3Client.DoesS3BucketExist(settings.AWSS3Bucket))
@@ -513,7 +561,7 @@ namespace Backup.Logic
             Directory.Delete(folder);
         }
 
-        static public string GetArchiveUniqueName(string archiveDir = null)
+        static internal string GetArchiveUniqueName(string archiveDir = null)
         {
             return Path.Combine(archiveDir, $"archive_{DateTime.Now.ToString("yyyy-MM-dd_HHmmss")}");
         }
@@ -532,9 +580,5 @@ namespace Backup.Logic
             Debug.WriteLine($"{e.PercentDone}% done");
         }
 
-        public static void DownloadGlacierArchive(string downloadDir)
-        {
-
-        }
     }
 }

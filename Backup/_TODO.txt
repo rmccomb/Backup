@@ -12,6 +12,26 @@ AWS
 GlacierBackupPolicy created for basic add, create, tag and delete archives and vaults.
 - backup-user granted policy
 
-
 Archive list - S3 ok
-Download function
+Download function - S3 ok, zip renames if already present, asyncronous methods
+
+
+Glacier put/get operations
+--------------------------
+Put - retain ArchiveId
+Large size chunking
+
+Get:
+Retrieval Options (Expedited, Standard, Bulk)
+Expedited (On-Demand, Provisioned)
+24 hour window - schedule portions download
+
+
+
+
+Misc
+------
+Tidy AWS Account on Configure page
+
+Download menu item
+Reorganise menu (Exit at top)

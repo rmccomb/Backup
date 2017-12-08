@@ -5,6 +5,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Backup.Logic;
 using System.Configuration;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Backup.Test
 {
@@ -56,6 +58,33 @@ namespace Backup.Test
             Assert.AreEqual(loaded.AWSAccessKeyID, settings.AWSAccessKeyID);
             Assert.AreEqual(loaded.AWSSecretAccessKey, settings.AWSSecretAccessKey);
             Assert.AreEqual(loaded.CreateBackupOnStart, settings.CreateBackupOnStart);
+        }
+
+        [TestMethod]
+        public async Task AsyncTestAsync()
+        {
+            //await PausePrintAsync();
+            Debug.WriteLine(DateTime.Now.ToString("hh:MM:ss"));
+            var tasks = new List<Task>();
+            for (int i = 0; i < 10; i++)
+            {
+                tasks.Add(PausePrintAsync());
+            }
+            await Task.WhenAll(tasks);
+            Debug.WriteLine("carrying on");
+            Debug.WriteLine(DateTime.Now.ToString("hh:MM:ss"));
+        }
+
+        public static Task PausePrintAsync()
+        {
+            Debug.WriteLine(DateTime.Now.ToString("hh:MM:ss"));
+            var tcs = new TaskCompletionSource<bool>();
+            new Timer(_ =>
+            {
+                Debug.WriteLine("Hello");
+                tcs.SetResult(true);
+            }).Change(1000, Timeout.Infinite);
+            return tcs.Task;
         }
     }
 }

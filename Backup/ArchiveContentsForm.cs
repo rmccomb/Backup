@@ -20,13 +20,19 @@ namespace Backup
             InitializeComponent();
 
             this.Message.Text = "Getting contents...";
-            PopulateControlsAsync();
+            this.Shown += ArchiveContentsForm_Shown;
         }
 
-        private async void PopulateControlsAsync()
+        private async void ArchiveContentsForm_Shown(object sender, EventArgs e)
         {
-            this.FilesList.BeginUpdate();
-            var files = await Task.Run(() => FileManager.GetBucketContents());
+            await PopulateControlsAsync();
+        }
+
+        private async Task PopulateControlsAsync()
+        {
+            //this.FilesList.BeginUpdate();
+            //var files = await Task.Run(() => FileManager.GetBucketContents());
+            var files = await FileManager.GetBucketContentsAsync();
             if (files == null || files.Count() == 0)
             {
                 this.Message.Text = "";
@@ -40,11 +46,11 @@ namespace Backup
                 this.FilesList.Items.Add(new ListViewItem(new string[] { file }));
             }
 
-            this.FilesList.EndUpdate();
+            //this.FilesList.EndUpdate();
             this.Message.Text = $"{files.Count()} files have been found";
         }
 
-        private void Download_Click(object sender, EventArgs e)
+        private async void Download_Click(object sender, EventArgs e)
         {
             if(String.IsNullOrEmpty(this.downloadPath))
                 this.downloadPath = FileManager.GetTempDirectory();
@@ -54,7 +60,7 @@ namespace Backup
             if (result == DialogResult.OK)
             {
                 this.downloadPath = this.folderBrowserDialog1.SelectedPath;
-                FileManager.DownloadS3Archive(this.downloadPath, this.FilesList.SelectedItems[0].Text);
+                await FileManager.DownloadS3ObjectAsync(this.downloadPath, this.FilesList.SelectedItems[0].Text);
             }
         }
 

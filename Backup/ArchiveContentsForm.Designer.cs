@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ArchiveContentsForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InventoryForm));
             this.CloseForm = new System.Windows.Forms.Button();
             this.Message = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();

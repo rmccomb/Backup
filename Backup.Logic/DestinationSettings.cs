@@ -23,7 +23,7 @@ namespace Backup.Logic
         public bool IsS3BucketEnabled { get; set; }
 
         public bool IsGlacierEnabled { get; set; }
-        public string GlacierVaultName { get; set; }
+        public string AWSGlacierVault { get; set; }
 
         public string AWSAccessKeyID { get; set; }
         public string AWSSecretAccessKey { get; set; }

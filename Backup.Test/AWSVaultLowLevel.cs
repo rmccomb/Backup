@@ -15,7 +15,6 @@ namespace Backup.Test
     using Amazon.SimpleNotificationService.Model;
     using Amazon.SQS;
     using Amazon.SQS.Model;
-    using Newtonsoft.Json;
     using Backup.Logic;
     using Amazon;
     using System.Diagnostics;
@@ -217,17 +216,17 @@ namespace Backup.Test
                     }
                     Debug.WriteLine("Got message");
                     Message message = receiveMessageResponse.Messages[0];
-                    Dictionary<string, string> outerLayer = JsonConvert.DeserializeObject<Dictionary<string, string>>(message.Body);
-                    Dictionary<string, object> fields = JsonConvert.DeserializeObject<Dictionary<string, object>>(outerLayer["Message"]);
-                    string statusCode = fields["StatusCode"] as string;
+                    //Dictionary<string, string> outerLayer = JsonConvert.DeserializeObject<Dictionary<string, string>>(message.Body);
+                    //Dictionary<string, object> fields = JsonConvert.DeserializeObject<Dictionary<string, object>>(outerLayer["Message"]);
+                    //string statusCode = fields["StatusCode"] as string;
 
-                    if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        Debug.WriteLine("Downloading job output");
-                        DownloadOutput(jobId, client); // Save job output to the specified file location.
-                    }
-                    else if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
-                        Debug.WriteLine("Job failed... cannot download the inventory.");
+                    //if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
+                    //{
+                    //    Debug.WriteLine("Downloading job output");
+                    //    DownloadOutput(jobId, client); // Save job output to the specified file location.
+                    //}
+                    //else if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
+                    //    Debug.WriteLine("Job failed... cannot download the inventory.");
 
                     jobDone = true;
                     sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = this.queueUrl, ReceiptHandle = message.ReceiptHandle });

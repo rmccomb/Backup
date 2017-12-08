@@ -5,6 +5,10 @@ using Amazon.Glacier.Transfer;
 using Amazon.Runtime;
 using System.Diagnostics;
 using Amazon.Glacier.Model;
+using Backup.Logic;
+using Amazon;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 namespace Backup.Test
 {
@@ -12,7 +16,7 @@ namespace Backup.Test
     public class AWSGlacierClient
     {
         [TestMethod]
-        public void GlacierPutFile()
+        public void UploadGlacier()
         {
             var vaultName = "test";
             var archive = @"C:\Users\Rob\source\repos\Backup\archive\archive_2017-11-24_122504.zip";
@@ -27,23 +31,25 @@ namespace Backup.Test
         }
 
         [TestMethod]
-        public void GlacierGetArchive()
+        public void DownloadGlacier()
         {
-            var vaultName = "test";
-            var archiveId = "PJN_XpM9iRZJM_NFYrFjJz1TD2 - nTzzF1uQS5aSNe0P7ThyyAGb8YWuNspfFYB4XlkbLka7wFtfURrJ5n17iRbNbgfprN7_9Fup3bgEG48YXjV - 0Ywi0XBGtRpc5siqjXB8EFB55Pg";
-            var andrew = "";
-            var secret = "";
+            var archiveId = "SOUSY3B601HbkJSiFdrzvE3CUDHuLHaoxbKwbIiSIdIuQTjcTw_XXm0i38HGLaJhubxRrTdvY-5UjYsSLWK0PVMcG5Mf9LKd9oBPAuwNIzGGhZmZ7zF9DaQU6lDuPh2C_4ViIc5dlw";
+            var settings = FileManager.GetSettings();
             var downloadFilePath = @"C:\Users\Rob\source\repos\Backup\archive\glacier.zip";
             try
             {
-                var manager = new ArchiveTransferManager(andrew, secret, Amazon.RegionEndpoint.USEast1);
+                var manager = new ArchiveTransferManager(
+                    settings.AWSAccessKeyID,
+                    settings.AWSSecretAccessKey,
+                    RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+
                 var options = new DownloadOptions();
                 options.StreamTransferProgress += AWSGlacierClient.Progress;
 
-                // Download an archive.
+                // High-level method to download an archive.
                 // Intiating the archive retrieval job and then polling SQS queue for the archive to be available
                 // This polling takes about 4 hours. Once the archive is available, downloading will begin.
-                manager.Download(vaultName, archiveId, downloadFilePath, options);
+                manager.Download(settings.AWSGlacierVault, archiveId, downloadFilePath, options);
             }
             catch (AmazonGlacierException e) { Debug.WriteLine(e.Message); throw e; }
             catch (AmazonServiceException e) { Debug.WriteLine(e.Message); throw e; }
@@ -60,51 +66,18 @@ namespace Backup.Test
             }
         }
 
-
-        //static string vaultName = "*** Provide vault name ***";
-        //static AmazonGlacierClient client;
-
-        //public static void Main(string[] args)
-        //{
-        //    try
-        //    {
-        //        using (client = new AmazonGlacierClient(Amazon.RegionEndpoint.USWest2))
-        //        {
-        //            Console.WriteLine("Creating a vault.");
-        //            CreateAVault();
-        //            DescribeVault();
-        //            GetVaultsList();
-        //            Console.WriteLine("\nVault created. Now press Enter to delete the vault...");
-        //            Console.ReadKey();
-        //            DeleteVault();
-        //        }
-        //    }
-        //    catch (AmazonGlacierException e) { Console.WriteLine(e.Message); }
-        //    catch (AmazonServiceException e) { Console.WriteLine(e.Message); }
-        //    catch (Exception e) { Console.WriteLine(e.Message); }
-        //    Console.WriteLine("To continue, press Enter");
-        //    Console.ReadKey();
-        //}
-
-        //static void CreateAVault()
-        //{
-        //    CreateVaultRequest request = new CreateVaultRequest()
-        //    {
-        //        VaultName = vaultName
-        //    };
-        //    CreateVaultResponse response = client.CreateVault(request);
-        //    Console.WriteLine("Vault created: {0}\n", response.Location);
-        //}
-
         [TestMethod]
         public void DescribeVault()
         {
+            var settings = FileManager.GetSettings();
             DescribeVaultRequest describeVaultRequest = new DescribeVaultRequest()
             {
-                VaultName = "test"
+                VaultName = settings.AWSGlacierVault
             };
-
-            var client = new AmazonGlacierClient(Amazon.RegionEndpoint.USEast1);
+            var client = new AmazonGlacierClient(
+                settings.AWSAccessKeyID,
+                settings.AWSSecretAccessKey,
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
             DescribeVaultResponse describeVaultResponse = client.DescribeVault(describeVaultRequest);
             Debug.WriteLine("\nVault description...");
@@ -122,8 +95,15 @@ namespace Backup.Test
         public void GetVaultsList()
         {
             string lastMarker = null;
-            Debug.WriteLine("\n List of vaults in your account in the specific region ...");
-            var client = new AmazonGlacierClient(Amazon.RegionEndpoint.USEast1);
+            var settings = FileManager.GetSettings();
+            DescribeVaultRequest describeVaultRequest = new DescribeVaultRequest()
+            {
+                VaultName = settings.AWSGlacierVault
+            };
+            var client = new AmazonGlacierClient(
+                settings.AWSAccessKeyID,
+                settings.AWSSecretAccessKey,
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
             do
             {
                 ListVaultsRequest request = new ListVaultsRequest()
@@ -141,14 +121,42 @@ namespace Backup.Test
             } while (lastMarker != null);
         }
 
-        //static void DeleteVault()
+        //[TestMethod]
+        //public void ReadInventoryFile()
         //{
-        //    DeleteVaultRequest request = new DeleteVaultRequest()
+        //    var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
+        //    if (File.Exists(inventoryFile))
         //    {
-        //        VaultName = vaultName
-        //    };
-        //    DeleteVaultResponse response = client.DeleteVault(request);
+        //        // Found inventory 
+        //        using (StreamReader file = File.OpenText(inventoryFile))
+        //        {
+        //            var text = File.ReadAllText(inventoryFile);
+        //            //Debug.WriteLine(JsonConvert.DeserializeObject<Inventory>(text));
+        //            //Debug.WriteLine(JsonConvert.DeserializeObject(text));
+        //            var inventory = new Inventory();
+        //            JsonConvert.PopulateObject(text, inventory);
+        //            Debug.WriteLine(inventory);
+        //        }
+
+        //    }
         //}
+
+        [TestMethod]
+        public void DeserialiseJson()
+        {
+            var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
+            if (File.Exists(inventoryFile))
+            {
+                // Found inventory 
+                using (var file = File.Open(inventoryFile, FileMode.Open))
+                {
+                    var s = new DataContractJsonSerializer(typeof(Inventory));
+                    var inventory = (Inventory)(s.ReadObject(file));
+                    Debug.WriteLine($"Archive ID: {inventory.ArchiveList[0].ArchiveId}");
+                }
+            }
+
+        }
     }
 }
 

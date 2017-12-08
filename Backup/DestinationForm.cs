@@ -55,7 +55,7 @@ namespace Backup
             S3Region.SelectedValue = settings.AWSS3Region == null ? settings.AWSS3Region.SystemName 
                 : AWSHelper.GetDefaultRegionSystemName();
 
-            GlacierVaultName.Text = settings.GlacierVaultName;
+            GlacierVaultName.Text = settings.AWSGlacierVault;
             IsGlacier.Checked = settings.IsGlacierEnabled;
             GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName 
                 : AWSHelper.GetDefaultRegionSystemName();
@@ -144,7 +144,7 @@ namespace Backup
                 settings.IsS3BucketEnabled != this.IsS3Bucket.Checked ||
                 settings.CreateBackupOnStart != this.CreateOnStart.Checked ||
                 settings.IsGlacierEnabled != this.IsGlacier.Checked ||
-                settings.GlacierVaultName != this.GlacierVaultName.Text ||
+                settings.AWSGlacierVault != this.GlacierVaultName.Text ||
                 settings.AWSS3Region != (AWSRegionEndPoint)this.S3Region.SelectedItem ||
                 settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem)
                 return true;
@@ -178,7 +178,7 @@ namespace Backup
                 AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem,
                 CreateBackupOnStart = this.CreateOnStart.Checked,
                 IsGlacierEnabled = this.IsGlacier.Checked,
-                GlacierVaultName = this.GlacierVaultName.Text,
+                AWSGlacierVault = this.GlacierVaultName.Text,
                 AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem
             };
             FileManager.SaveSettings(this.settings);
@@ -188,9 +188,19 @@ namespace Backup
         private void ListBucketContents_Click(object sender, EventArgs e)
         {
             this.SaveSettings();
-            var dlg = new ArchiveContentsForm
+            var dlg = new FileListForm
             {
                 Text = this.settings.AWSS3Bucket
+            };
+            dlg.Show();
+        }
+
+        private void ListInventory_Click(object sender, EventArgs e)
+        {
+            this.SaveSettings();
+            var dlg = new InventoryForm
+            {
+                Text = this.settings.AWSGlacierVault
             };
             dlg.Show();
         }

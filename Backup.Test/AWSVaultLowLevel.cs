@@ -117,13 +117,13 @@ namespace Backup.Test
                     settings.AWSSecretAccessKey,
                     RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
                 {
-                    this.queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/019910574325/GlacierDownload-636482535974517302";
-                    var jobId = "fQfO2jfxjxZeGgy-mDYz2_p74vuWGaTF9wugaIi-Mbpa5vqiSOLROTrXxRLHwz3LXHsadyOrn_HDXsefe_yk4Z6rb4T_";
+                    this.queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/019910574325/GlacierDownload-636484317871706400";
+                    var jobId = "gz4vCTUTRazp_2II86GPgWY-FEneRCEuRq8hBhueN2Dtxoaa17Om-c1wJ8egVAfdwN5kgOyEdR6_y_mRE3AROz4fzQMf";
                     ProcessQueue(jobId, client);
                 }
 
                 // Delete SNS topic and SQS queue.
-                snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = this.topicArn }); // TODO need topic ARN
+                snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = this.topicArn }); // arn:aws:sns:ap-southeast-2:019910574325:GlacierDownload-636484317871706400
                 sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = this.queueUrl });
             }
 
@@ -216,6 +216,7 @@ namespace Backup.Test
                     }
                     Debug.WriteLine("Got message");
                     Message message = receiveMessageResponse.Messages[0];
+                    Debug.WriteLine(message.Body);
                     //Dictionary<string, string> outerLayer = JsonConvert.DeserializeObject<Dictionary<string, string>>(message.Body);
                     //Dictionary<string, object> fields = JsonConvert.DeserializeObject<Dictionary<string, object>>(outerLayer["Message"]);
                     //string statusCode = fields["StatusCode"] as string;
@@ -229,7 +230,7 @@ namespace Backup.Test
                     //    Debug.WriteLine("Job failed... cannot download the inventory.");
 
                     jobDone = true;
-                    sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = this.queueUrl, ReceiptHandle = message.ReceiptHandle });
+                    //sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = this.queueUrl, ReceiptHandle = message.ReceiptHandle });
                 }
             }
 

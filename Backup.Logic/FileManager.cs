@@ -22,6 +22,7 @@ using Amazon.SQS.Model;
 using Amazon.Glacier;
 using Amazon.Glacier.Model;
 using System.Text;
+using System.Web.Script.Serialization;
 
 namespace Backup.Logic
 {
@@ -42,7 +43,7 @@ namespace Backup.Logic
         public const string CatalogName = "bbackup.catalog.dat";
         public const string DestinationsName = "bbackup.destinations.dat";
         public const string InventoryName = "bbackup.inventory.json";
-        public const string InventoryTopicName = "bbackup.inventorytopic.json";
+        public const string InventoryTopicName = "bbackup.inventorytopic.dat";
 
         // The list of target directories
         public const string SourcesName = "bbackup.sources.dat";
@@ -57,10 +58,12 @@ namespace Backup.Logic
 
         public static event DownloadSuccessHandler DownloadSuccess;
         public delegate void DownloadSuccessHandler(string successMessage);
+        public static event DownloadWarningHandler DownloadWarning;
+        public delegate void DownloadWarningHandler(string warningMessage);
         public static event DownloadErrorHandler DownloadError;
         public delegate void DownloadErrorHandler(string errorMessage);
         #endregion
-
+        #region SQS Policy
         const string SQS_POLICY =
             @"{" +
             "    \"Version\" : \"2012-10-17\"," +
@@ -79,7 +82,7 @@ namespace Backup.Logic
             "        }" +
             "    ]" +
             "}";
-
+        #endregion
         /// <summary>
         /// Get the configured temp directory from application settings or, 
         /// if not defined create a default under user's Application Data
@@ -145,9 +148,9 @@ namespace Backup.Logic
         private static void SaveTopicFile(InventoryTopic topic)
         {
             var formatter = new BinaryFormatter();
-            var requestFileName = Path.Combine(GetTempDirectory(), InventoryTopicName);
-            File.Delete(requestFileName);
-            var stream = new FileStream(requestFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            var topicFile = Path.Combine(GetTempDirectory(), InventoryTopicName);
+            File.Delete(topicFile);
+            var stream = new FileStream(topicFile, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, topic);
             stream.Close();
         }
@@ -227,8 +230,9 @@ namespace Backup.Logic
             DownloadSuccess?.Invoke($"Backup downloaded {info.ObjectKey} to {Path.Combine(info.DownloadDirectory, checkedFilePath)}");
         }
 
-        public static async Task<Inventory> GetInventoryAsync()
+        public static InventoryResult GetInventory()
         {
+            #region pseudocode
             // Is there an inventory file?
             // Yes: return Inventory
             // Not found:
@@ -237,34 +241,41 @@ namespace Backup.Logic
             //      No: Issue request and save SNS topic, Job ID, Queue URL
             // Poll topic for response
             // Poll Message received?
-            //   Yes: serialize inventory to file and return
-            //   No: return details of inventory request (awaiting completion)        
-
-            var inv = GetInventoryFile();
-            if (inv != null)
-                return inv;
-
-            // Is there a request?
-            InventoryTopic topic = GetExistingTopic();
-            if (topic == null)
+            //    Yes: serialize inventory to file and return
+            //    No: return details of inventory request (awaiting completion)        
+            #endregion
+            try
             {
-                // Issue request and serialize InventoryRequest to file
-                topic = SetupTopicAndSubscriptions();
-                InitiateJob(topic);
-                SaveTopicFile(topic);
-                // return "request issued"
+                var inv = GetInventoryFile();
+                if (inv != null)
+                    return new InventoryResult { Inventory = inv, Result = "OK" };
+
+                // Is there a request?
+                InventoryTopic topic = GetExistingTopic();
+                if (topic == null)
+                {
+                    // Issue request and serialize InventoryRequest to file
+                    topic = SetupTopicAndSubscriptions();
+                    InitiateInventoryRetrieval(topic);
+                    SaveTopicFile(topic);
+                    Debug.WriteLine("inventory request issued " + DateTime.Now);
+                    return new InventoryResult { Result = "Requested" };
+                }
+
+                // Read queue and any message
+                return ProcessQueue(topic);
             }
-
-            // Read queue and any message
-            ProcessQueue(topic);
-            //TODO return message content
-
-            throw new NotImplementedException();
+            catch (Exception ex)
+            {
+                File.Delete(Path.Combine(GetTempDirectory(), InventoryTopicName));
+                BackupError?.Invoke(ex.Message);
+                return new InventoryResult { Result = "Error" };
+            }
         }
 
         private static Inventory GetInventoryFile()
         {
-            var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
+            var inventoryFile = Path.Combine(GetTempDirectory(), InventoryName);
             if (File.Exists(inventoryFile))
             {
                 // Found inventory, return
@@ -272,58 +283,83 @@ namespace Backup.Logic
                 {
                     var s = new DataContractJsonSerializer(typeof(Inventory));
                     var inventory = (Inventory)s.ReadObject(file);
-                    Debug.WriteLine($"Archive ID: {inventory.ArchiveList[0].ArchiveId}");
+                    Debug.WriteLine($"Inventory Date: {inventory.InventoryDate}");
                     return inventory;
                 }
             }
             return null;
         }
 
-        private static void ProcessQueue(InventoryTopic topic)
+        private static InventoryResult ProcessQueue(InventoryTopic topic)
         {
-            var settings = GetSettings();
-            using (var client = new AmazonGlacierClient(
-                        settings.AWSAccessKeyID,
-                        settings.AWSSecretAccessKey,
-                        RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+            try
             {
-                var receiveMessageRequest = new ReceiveMessageRequest { QueueUrl = topic.QueueUrl, MaxNumberOfMessages = 1 };
-                //bool jobDone = false;
-                var sqsClient = new AmazonSQSClient(settings.AWSAccessKeyID, settings.AWSSecretAccessKey, RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
-                var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
-                if (receiveMessageResponse.Messages.Count == 0)
-                    return; // "job incomplete"
+                var settings = GetSettings();
+                using (var client = new AmazonGlacierClient(
+                            settings.AWSAccessKeyID,
+                            settings.AWSSecretAccessKey,
+                            RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+                {
+                    var receiveMessageRequest = new ReceiveMessageRequest { QueueUrl = topic.QueueUrl, MaxNumberOfMessages = 1 };
+                    var sqsClient = new AmazonSQSClient(settings.AWSAccessKeyID, settings.AWSSecretAccessKey, RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+                    var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
+                    if (receiveMessageResponse.Messages.Count == 0)
+                    {
+                        Debug.WriteLine("job not completed");
+                        return new InventoryResult { Result = "Incomplete" };
+                    }
+                    Debug.WriteLine("Got message");
+                    Message message = receiveMessageResponse.Messages[0];
+                    var jss = new JavaScriptSerializer();
+                    var outer = jss.Deserialize<Dictionary<string, string>>(message.Body);
+                    var fields = jss.Deserialize<Dictionary<string, object>>(outer["Message"]);
+                    string status = fields["StatusCode"] as string;
+                    if (string.Equals(status, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        Debug.WriteLine("Downloading job output...");
+                        DownloadGlacierJobOutput(topic.JobId, client, settings.AWSGlacierVault, InventoryName);
+                        var inventory = GetInventoryFile();
+                        return new InventoryResult { Result = "OK", Inventory = inventory };
+                    }
+                    else if (string.Equals(status, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        DownloadError?.Invoke("Job failed, cannot download the inventory");
+                        return new InventoryResult { Result = "Job Failed" };
+                    }
+                    else if (string.Equals(status, GlacierUtils.JOB_STATUS_INPROGRESS, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        DownloadWarning?.Invoke("Job in progress");
+                        return new InventoryResult { Result = "Job in progress" };
+                    }
+                    throw new ApplicationException("unknown job status");
+                }
+            }
+            catch (Exception ex)
+            {
+                DownloadError?.Invoke(ex.Message);
+                throw ex;
+            }
+            finally
+            {
+                var settings = GetSettings();
+                var snsClient = new AmazonSimpleNotificationServiceClient(
+                    settings.AWSAccessKeyID,
+                    settings.AWSSecretAccessKey,
+                    RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
-                Debug.WriteLine("Got message");
-                Message message = receiveMessageResponse.Messages[0];
-                
-                var s = new DataContractJsonSerializer(typeof(MessageBody));
+                var sqsClient = new AmazonSQSClient(
+                    settings.AWSAccessKeyID,
+                    settings.AWSSecretAccessKey,
+                    RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
-                var encoder = new ASCIIEncoding();
-                var bytes = encoder.GetBytes(message.Body);
-                MemoryStream ms = new MemoryStream(bytes);
-
-                var outer = (Inventory)s.ReadObject(ms);
-                Debug.WriteLine(outer);
-                //Dictionary<string, string> outerLayer = JsonConvert.DeserializeObject<Dictionary<string, string>>(message.Body);
-                //Dictionary<string, object> fields = JsonConvert.DeserializeObject<Dictionary<string, object>>(outerLayer["Message"]);
-                //string statusCode = fields["StatusCode"] as string;
-
-                //if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
-                //{
-                //    Debug.WriteLine("Downloading job output");
-                //    DownloadOutput(jobId, client, settings.AWSGlacierVault); // Save job output to the specified file location.
-                //}
-                //else if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
-                //    Debug.WriteLine("Job failed... cannot download the inventory.");
-
-                //jobDone = true;
                 //sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = topic.QueueUrl, ReceiptHandle = message.ReceiptHandle });
-
+                // Delete SNS topic and SQS queue.
+                snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = topic.TopicARN });
+                sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = topic.QueueUrl });
             }
         }
 
-        void DownloadOutput(string jobId, AmazonGlacierClient client, string vaultName)
+        private static void DownloadGlacierJobOutput(string jobId, AmazonGlacierClient client, string vaultName, string fileName)
         {
             var getJobOutputRequest = new GetJobOutputRequest
             {
@@ -334,15 +370,15 @@ namespace Backup.Logic
             var getJobOutputResponse = client.GetJobOutput(getJobOutputRequest);
             using (Stream webStream = getJobOutputResponse.Body)
             {
-                var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
-                using (Stream fileToSave = File.OpenWrite(inventoryFile))
+                var file = Path.Combine(GetTempDirectory(), fileName);
+                using (Stream fileToSave = File.OpenWrite(file))
                 {
                     CopyStream(webStream, fileToSave);
                 }
             }
         }
 
-        void CopyStream(Stream input, Stream output)
+        private static void CopyStream(Stream input, Stream output)
         {
             byte[] buffer = new byte[65536];
             int length;
@@ -352,15 +388,15 @@ namespace Backup.Logic
             }
         }
 
-        private static string InitiateJob(InventoryTopic topic)
+        private static void InitiateInventoryRetrieval(InventoryTopic topic)
         {
+            // Make the call to AWS Glacier to get inventory
             var settings = GetSettings();
             using (var client = new AmazonGlacierClient(
                         settings.AWSAccessKeyID,
                         settings.AWSSecretAccessKey,
                         RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
             {
-                // Initiate job.
                 var initJobRequest = new InitiateJobRequest()
                 {
                     VaultName = settings.AWSGlacierVault,
@@ -373,9 +409,35 @@ namespace Backup.Logic
                 };
 
                 var initJobResponse = client.InitiateJob(initJobRequest);
-                return initJobResponse.JobId;
+                topic.JobId = initJobResponse.JobId;
             }
         }
+
+        public static void InitiateArchiveRetrieval(string topicARN, string archiveId)
+        {
+            // Make the call to AWS Glacier to get archive
+            var settings = GetSettings();
+            using (var client = new AmazonGlacierClient(
+                        settings.AWSAccessKeyID,
+                        settings.AWSSecretAccessKey,
+                        RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+            {
+                InitiateJobRequest initJobRequest = new InitiateJobRequest()
+                {
+                    VaultName = settings.AWSGlacierVault,
+                    JobParameters = new JobParameters()
+                    {
+                        Type = "archive-retrieval",
+                        ArchiveId = archiveId,
+                        SNSTopic = topicARN,
+                    }
+                };
+
+                InitiateJobResponse initJobResponse = client.InitiateJob(initJobRequest);
+                string jobId = initJobResponse.JobId;
+            }
+        }
+
 
         private static InventoryTopic SetupTopicAndSubscriptions()
         {
@@ -663,11 +725,6 @@ namespace Backup.Logic
         private static void UploadGlacierProgress(object sender, StreamTransferProgressArgs e)
         {
             Debug.WriteLine($"Uploaded {e.PercentDone}");
-        }
-
-        public static void DownloadGlacierArchive(string downloadDir)
-        {
-
         }
 
         private static void UploadS3Archive(DestinationSettings settings, string zipPath)

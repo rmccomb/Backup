@@ -52,16 +52,16 @@ namespace Backup
 
             S3BucketName.Text = settings.AWSS3Bucket;
             IsS3Bucket.Checked = settings.IsS3BucketEnabled;
-            S3Region.SelectedValue = settings.AWSS3Region == null ? settings.AWSS3Region.SystemName 
-                : AWSHelper.GetDefaultRegionSystemName();
+            S3Region.SelectedValue = settings.AWSS3Region == null ? settings.AWSS3Region.SystemName : AWSHelper.GetDefaultRegionSystemName();
 
             GlacierVaultName.Text = settings.AWSGlacierVault;
             IsGlacier.Checked = settings.IsGlacierEnabled;
-            GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName 
-                : AWSHelper.GetDefaultRegionSystemName();
+            GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName : AWSHelper.GetDefaultRegionSystemName();
 
             AWSAccessKey.Text = settings.AWSAccessKeyID;
             _awsSecretKey = settings.AWSSecretAccessKey;
+            SMSContact.Text = settings.SMSContact;
+            IsSMSContact.Checked = settings.IsSMSContactEnabled;
 
             CreateOnStart.Checked = settings.CreateBackupOnStart;
         }
@@ -146,7 +146,9 @@ namespace Backup
                 settings.IsGlacierEnabled != this.IsGlacier.Checked ||
                 settings.AWSGlacierVault != this.GlacierVaultName.Text ||
                 settings.AWSS3Region != (AWSRegionEndPoint)this.S3Region.SelectedItem ||
-                settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem)
+                settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem ||
+                settings.SMSContact != this.SMSContact.Text ||
+                settings.IsSMSContactEnabled != this.IsSMSContact.Checked)
                 return true;
             else
                 return false;
@@ -179,7 +181,9 @@ namespace Backup
                 CreateBackupOnStart = this.CreateOnStart.Checked,
                 IsGlacierEnabled = this.IsGlacier.Checked,
                 AWSGlacierVault = this.GlacierVaultName.Text,
-                AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem
+                AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem,
+                SMSContact = this.SMSContact.Text,
+                IsSMSContactEnabled = this.IsSMSContact.Checked
             };
             FileManager.SaveSettings(this.settings);
             PopulateControls();

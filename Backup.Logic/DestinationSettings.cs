@@ -32,5 +32,7 @@ namespace Backup.Logic
         public AWSRegionEndPoint AWSS3Region { get; set; }
         public AWSRegionEndPoint AWSGlacierRegion { get; set; }
 
+        public string SMSContact { get; set; }
+        public bool IsSMSContactEnabled { get; set; }
     }
 }

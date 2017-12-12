@@ -27,8 +27,7 @@ Expedited (On-Demand, Provisioned)
 24 hour window - schedule portions download
 
 
-Local Inventory - expire after 24 hours
-
+Local Inventory - option to refresh
 
 
 

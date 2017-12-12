@@ -30,22 +30,20 @@ namespace Backup
 
         private async Task PopulateControlsAsync()
         {
-            var inventory = await FileManager.GetInventoryAsync();
-            if (inventory == null)
+            var result = await Task.Run(() => FileManager.GetInventory());
+            if (result.Result != "OK")
             {
-                this.Message.Text = "";
-                this.FilesList.Items.Add(new ListViewItem("No new or changed files"));
+                this.FilesList.Items.Add(new ListViewItem("No items found"));
                 this.FilesList.Enabled = false;
                 this.Download.Enabled = false;
+                this.Message.Text = result.Result;
                 return;
             }
-            foreach (var archive in inventory.ArchiveList)
+            foreach (var archive in result.Inventory.ArchiveList)
             {
                 this.FilesList.Items.Add(new ListViewItem(new string[] { archive.ArchiveDescription, archive.Size.ToString() }));
             }
-
-            //this.FilesList.EndUpdate();
-            this.Message.Text = $"{inventory.ArchiveList.Count()} archives were been found";
+            this.Message.Text = $"Inventory as at {result.Inventory.InventoryDate}";
         }
 
         private async void Download_Click(object sender, EventArgs e)
@@ -75,9 +73,9 @@ namespace Backup
                 this.Download.Enabled = false;
         }
 
-        private void FilesList_SelectedIndexChanged(object sender, EventArgs e)
+        private void Refresh_Click(object sender, EventArgs e)
         {
-            Debug.WriteLine("FilesList_SelectedIndexChanged");
+
         }
     }
 }

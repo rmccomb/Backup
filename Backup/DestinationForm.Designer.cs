@@ -53,6 +53,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.ListInventory = new System.Windows.Forms.Button();
             this.GlacierRegion = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
             this.IsGlacierLabel = new System.Windows.Forms.Label();
@@ -60,7 +61,9 @@
             this.GlacierVaultName = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.ListInventory = new System.Windows.Forms.Button();
+            this.SMSContact = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.IsSMSContact = new System.Windows.Forms.CheckBox();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).BeginInit();
@@ -177,7 +180,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(404, 315);
+            this.CloseForm.Location = new System.Drawing.Point(405, 331);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -188,7 +191,7 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(490, 315);
+            this.Cancel.Location = new System.Drawing.Point(491, 331);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 11;
@@ -198,7 +201,7 @@
             // CreateOnStart
             // 
             this.CreateOnStart.AutoSize = true;
-            this.CreateOnStart.Location = new System.Drawing.Point(12, 316);
+            this.CreateOnStart.Location = new System.Drawing.Point(13, 334);
             this.CreateOnStart.Name = "CreateOnStart";
             this.CreateOnStart.Size = new System.Drawing.Size(221, 17);
             this.CreateOnStart.TabIndex = 11;
@@ -290,6 +293,16 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Amazon Glacier";
             // 
+            // ListInventory
+            // 
+            this.ListInventory.Location = new System.Drawing.Point(429, 15);
+            this.ListInventory.Name = "ListInventory";
+            this.ListInventory.Size = new System.Drawing.Size(123, 23);
+            this.ListInventory.TabIndex = 20;
+            this.ListInventory.Text = "List Inventory...";
+            this.ListInventory.UseVisualStyleBackColor = true;
+            this.ListInventory.Click += new System.EventHandler(this.ListInventory_Click);
+            // 
             // GlacierRegion
             // 
             this.GlacierRegion.DataSource = this.aWSRegionEndPointBindingSource;
@@ -349,25 +362,45 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.IsSMSContact);
+            this.groupBox4.Controls.Add(this.SMSContact);
+            this.groupBox4.Controls.Add(this.label9);
             this.groupBox4.Controls.Add(this.label2);
             this.groupBox4.Controls.Add(this.AWSAccessKey);
             this.groupBox4.Controls.Add(this.AddAWSSecret);
             this.groupBox4.Location = new System.Drawing.Point(12, 243);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(566, 57);
+            this.groupBox4.Size = new System.Drawing.Size(566, 72);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "AWS Credentials";
             // 
-            // ListInventory
+            // SMSContact
             // 
-            this.ListInventory.Location = new System.Drawing.Point(429, 15);
-            this.ListInventory.Name = "ListInventory";
-            this.ListInventory.Size = new System.Drawing.Size(123, 23);
-            this.ListInventory.TabIndex = 20;
-            this.ListInventory.Text = "List Inventory...";
-            this.ListInventory.UseVisualStyleBackColor = true;
-            this.ListInventory.Click += new System.EventHandler(this.ListInventory_Click);
+            this.SMSContact.Location = new System.Drawing.Point(100, 45);
+            this.SMSContact.Name = "SMSContact";
+            this.SMSContact.Size = new System.Drawing.Size(122, 20);
+            this.SMSContact.TabIndex = 17;
+            this.SMSContact.Text = "\r\n";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(14, 48);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(73, 13);
+            this.label9.TabIndex = 16;
+            this.label9.Text = "SMS Contact:";
+            // 
+            // IsSMSContact
+            // 
+            this.IsSMSContact.AutoSize = true;
+            this.IsSMSContact.Location = new System.Drawing.Point(228, 48);
+            this.IsSMSContact.Name = "IsSMSContact";
+            this.IsSMSContact.Size = new System.Drawing.Size(59, 17);
+            this.IsSMSContact.TabIndex = 18;
+            this.IsSMSContact.Text = "Enable";
+            this.IsSMSContact.UseVisualStyleBackColor = true;
             // 
             // DestinationForm
             // 
@@ -375,7 +408,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(587, 354);
+            this.ClientSize = new System.Drawing.Size(587, 369);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
@@ -436,5 +469,8 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.BindingSource aWSRegionEndPointBindingSource;
         private System.Windows.Forms.Button ListInventory;
+        private System.Windows.Forms.TextBox SMSContact;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.CheckBox IsSMSContact;
     }
 }

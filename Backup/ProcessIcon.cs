@@ -39,7 +39,13 @@ namespace Backup
             FileManager.BackupWarning += FileManager_BackupWarning;
             FileManager.BackupError += FileManager_BackupError;
             FileManager.DownloadSuccess += FileManager_DownloadSuccess;
+            FileManager.DownloadWarning += FileManager_DownloadWarning;
             FileManager.DownloadError += FileManager_DownloadError;
+        }
+
+        private void FileManager_DownloadWarning(string warningMessage)
+        {
+            CreateNotifyWarning(warningMessage);
         }
 
         private void FileManager_DownloadSuccess(string successMessage)

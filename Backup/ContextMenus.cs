@@ -12,6 +12,7 @@ namespace Backup
     public class ContextMenus
     {
         ConfigureForm configForm;
+        DestinationForm destinationForm;
         FileListForm fileListForm;
         NotifyIcon icon;
 
@@ -19,6 +20,26 @@ namespace Backup
         {
             ContextMenuStrip menu = new ContextMenuStrip();
             this.icon = icon;
+
+            var exit = new ToolStripMenuItem();
+            exit.Text = "Exit";
+            exit.Click += new EventHandler(Exit_Click);
+            menu.Items.Add(exit);
+
+            var sep = new ToolStripSeparator();
+            menu.Items.Add(sep);
+
+            var configure = new ToolStripMenuItem();
+            configure.Text = "Configure...";
+            configure.Click += new EventHandler(Configure_Click);
+            //configure.Image = Resources.save_16xMD;
+            menu.Items.Add(configure);
+
+            //var archive = new ToolStripMenuItem();
+            //archive.Text = "Archive...";
+            //archive.Click += new EventHandler(Archive_Click);
+            //archive.Image = Resources.Cloud_16x;
+            //menu.Items.Add(archive);
 
             var item = new ToolStripMenuItem();
             item.Text = "Discover files...";
@@ -31,22 +52,23 @@ namespace Backup
             backup.Click += new EventHandler(Backup_Click);
             backup.Image = Resources.Open_16x;
             menu.Items.Add(backup);
-
-            var configure = new ToolStripMenuItem();
-            configure.Text = "Configure...";
-            configure.Click += new EventHandler(Configure_Click);
-            configure.Image = Resources.save_16xMD;
-            menu.Items.Add(configure);
-
-            var sep = new ToolStripSeparator();
-            menu.Items.Add(sep);
-
-            var exit = new ToolStripMenuItem();
-            exit.Text = "Exit";
-            exit.Click += new EventHandler(Exit_Click);
-            menu.Items.Add(exit);
-
+            
             return menu;
+        }
+
+        private void Archive_Click(object sender, EventArgs e)
+        {
+            if (this.destinationForm == null)
+            {
+                this.destinationForm = new DestinationForm();
+                this.destinationForm.FormClosed += Destination_FormClosed;
+                this.destinationForm.ShowDialog();
+            }
+        }
+
+        private void Destination_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            this.destinationForm = null;
         }
 
         private void Configure_Click(object sender, EventArgs e)

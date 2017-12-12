@@ -18,6 +18,7 @@ namespace Backup.Test
     using Backup.Logic;
     using Amazon;
     using System.Diagnostics;
+    using System.Web.Script.Serialization;
 
     namespace glacier.amazon.com.docsamples
     {
@@ -123,8 +124,8 @@ namespace Backup.Test
                 }
 
                 // Delete SNS topic and SQS queue.
-                snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = this.topicArn }); // arn:aws:sns:ap-southeast-2:019910574325:GlacierDownload-636484317871706400
-                sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = this.queueUrl });
+                //snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = this.topicArn }); // arn:aws:sns:ap-southeast-2:019910574325:GlacierDownload-636484317871706400
+                //sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = this.queueUrl });
             }
 
             void SetupTopicAndQueue()
@@ -216,21 +217,21 @@ namespace Backup.Test
                     }
                     Debug.WriteLine("Got message");
                     Message message = receiveMessageResponse.Messages[0];
-                    Debug.WriteLine(message.Body);
-                    //Dictionary<string, string> outerLayer = JsonConvert.DeserializeObject<Dictionary<string, string>>(message.Body);
-                    //Dictionary<string, object> fields = JsonConvert.DeserializeObject<Dictionary<string, object>>(outerLayer["Message"]);
-                    //string statusCode = fields["StatusCode"] as string;
+                    var jss = new JavaScriptSerializer();
+                    var outer = jss.Deserialize<Dictionary<string, string>>(message.Body);
+                    var fields = jss.Deserialize<Dictionary<string, object>>(outer["Message"]);
+                    string status = fields["StatusCode"] as string;
 
-                    //if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
-                    //{
-                    //    Debug.WriteLine("Downloading job output");
-                    //    DownloadOutput(jobId, client); // Save job output to the specified file location.
-                    //}
-                    //else if (string.Equals(statusCode, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
-                    //    Debug.WriteLine("Job failed... cannot download the inventory.");
+                    if (string.Equals(status, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        Debug.WriteLine("Downloading job output");
+                        DownloadOutput(jobId, client); // Save job output to the specified file location.
+                    }
+                    else if (string.Equals(status, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
+                        Debug.WriteLine("Job failed... cannot download the inventory.");
 
                     jobDone = true;
-                    //sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = this.queueUrl, ReceiptHandle = message.ReceiptHandle });
+                    sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = this.queueUrl, ReceiptHandle = message.ReceiptHandle });
                 }
             }
 

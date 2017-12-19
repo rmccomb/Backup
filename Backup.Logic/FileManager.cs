@@ -37,16 +37,18 @@ namespace Backup.Logic
         public const string TempDirKey = "tempDir"; // The location of SettingsFolder
         // ...others as req.
 
-        // Files capturing the status of the files
-        public const string DiscoveredName = "bbackup.disco.dat";
-        public const string ProcessingName = "bbackup.processing.dat";
-        public const string CatalogName = "bbackup.catalog.dat";
-        public const string DestinationsName = "bbackup.destinations.dat";
-        public const string InventoryName = "bbackup.inventory.json";
-        public const string InventoryTopicName = "bbackup.inventorytopic.dat";
+        // Files for persistant data
+        public const string DiscoveredFileName = "bbackup.disco.dat";
+        public const string ProcessingFileName = "bbackup.processing.dat";
+        public const string CatalogFileName = "bbackup.catalog.dat";
+        public const string DestinationsFileName = "bbackup.destinations.dat";
+        public const string InventoryFileName = "glacier.inventory.json";
+        public const string InventoryTopicFileName = "glacier.inventory.topic";
+        public const string ArchiveTopicFileName = "glacier.archive#.topic";
+        public const string InventoryModelFileName = "bback.inventory.model";
 
         // The list of target directories
-        public const string SourcesName = "bbackup.sources.dat";
+        public const string SourcesFileName = "bbackup.sources.dat";
 
         #region events
         public static event BackupSuccessHandler BackupSuccess;
@@ -83,6 +85,13 @@ namespace Backup.Logic
             "    ]" +
             "}";
         #endregion
+
+        static bool isCancelling = false;
+        static public void Cancel()
+        {
+            isCancelling = true;
+        }
+
         /// <summary>
         /// Get the configured temp directory from application settings or, 
         /// if not defined create a default under user's Application Data
@@ -130,25 +139,28 @@ namespace Backup.Logic
             return settings;
         }
 
-        private static InventoryTopic GetExistingTopic()
+        public static Topic GetExistingTopic(string topicName)
         {
-            var requestFile = Path.Combine(GetTempDirectory(), InventoryTopicName);
-            if (File.Exists(requestFile))
+            var file = Path.Combine(GetTempDirectory(), topicName);
+            if (File.Exists(file))
             {
                 var formatter = new BinaryFormatter();
-                var topicFileName = Path.Combine(GetTempDirectory(), InventoryTopicName);
-                var stream = new FileStream(topicFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-                var topic = (InventoryTopic)formatter.Deserialize(stream);
+                var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
+                var topic = (Topic)formatter.Deserialize(stream);
                 stream.Close();
+
+                // Update status
+                //topic.Status = ProcessTopic(topic, outputFile);
+
                 return topic;
             }
             return null;
         }
 
-        private static void SaveTopicFile(InventoryTopic topic)
+        private static void SaveTopicFile(Topic topic)
         {
             var formatter = new BinaryFormatter();
-            var topicFile = Path.Combine(GetTempDirectory(), InventoryTopicName);
+            var topicFile = Path.Combine(GetTempDirectory(), topic.TopicFileName);
             File.Delete(topicFile);
             var stream = new FileStream(topicFile, FileMode.Create, FileAccess.Write, FileShare.None);
             formatter.Serialize(stream, topic);
@@ -158,7 +170,7 @@ namespace Backup.Logic
         static public List<Source> GetSources()
         {
             CreateSourcesFile();
-            var lines = File.ReadAllLines(Path.Combine(GetTempDirectory(), SourcesName)).Skip(1);
+            var lines = File.ReadAllLines(Path.Combine(GetTempDirectory(), SourcesFileName)).Skip(1);
             return new List<Source>(
                 (from l in lines
                  select new Source(
@@ -170,7 +182,7 @@ namespace Backup.Logic
 
         static public void SaveSources(List<Source> sources)
         {
-            File.Delete(Path.Combine(GetTempDirectory(), SourcesName));
+            File.Delete(Path.Combine(GetTempDirectory(), SourcesFileName));
             CreateSourcesFile(sources);
         }
 
@@ -230,11 +242,57 @@ namespace Backup.Logic
             DownloadSuccess?.Invoke($"Backup downloaded {info.ObjectKey} to {Path.Combine(info.DownloadDirectory, checkedFilePath)}");
         }
 
-        public static InventoryResult GetInventory()
+        /// <summary>
+        /// Get a Glacier archive
+        /// </summary>
+        public static GlacierResult RequestGlacierArchive(string archiveId, string downloadPath)
+        {
+            #region pseudocode
+            // Is there an archive request issued (check for file)?
+            // Yes: Poll queue for response
+            // No: create a request and persist details to file
+            // Poll topic 
+            // Message received?
+            // Yes: serialise job to filePath
+            // No: NOP
+            #endregion
+            try
+            {
+                string topicFileName = GetArchiveTopicFileName(archiveId);
+                Topic topic = GetExistingTopic(topicFileName);
+                if (topic == null)
+                {
+                    // Issue new request and serialize topic details to file
+                    topic = SetupTopicAndSubscriptions(topicFileName, Path.Combine(downloadPath, topicFileName));
+                    InitiateArchiveRetrieval(topic, archiveId);
+                    SaveTopicFile(topic);
+                }
+                //ProcessQueue(topic);
+                //if (topic.Status == GlacierResult.Completed)
+                //    DownloadSuccess?.Invoke($"Backup downloaded {topic.OutputPath}");
+
+                return topic.Status;
+            }
+            catch (Exception ex)
+            {
+                BackupError?.Invoke(ex.Message);
+                return GlacierResult.Error;
+            }
+        }
+
+        public static string GetArchiveTopicFileName(string archiveId)
+        {
+            return ArchiveTopicFileName.Replace("#", archiveId.GetHashCode().ToString());
+        }
+
+        /// <summary>
+        /// Issue a request to get Glacier inventory or process existing request
+        /// </summary>
+        public static GlacierResult GetGlacierInventory()
         {
             #region pseudocode
             // Is there an inventory file?
-            // Yes: return Inventory
+            // Yes: return Inventory and issue new request
             // Not found:
             //   Is an inventory request issued?
             //      Yes: get request details
@@ -242,56 +300,141 @@ namespace Backup.Logic
             // Poll topic for response
             // Poll Message received?
             //    Yes: serialize inventory to file and return
-            //    No: return details of inventory request (awaiting completion)        
+            //    No: return details of inventory request (in progress)
             #endregion
             try
             {
-                var inv = GetInventoryFile();
-                if (inv != null)
-                    return new InventoryResult { Inventory = inv, Result = "OK" };
-
-                // Is there a request?
-                InventoryTopic topic = GetExistingTopic();
+                Topic topic = GetExistingTopic(InventoryTopicFileName);
                 if (topic == null)
                 {
-                    // Issue request and serialize InventoryRequest to file
-                    topic = SetupTopicAndSubscriptions();
+                    var inventoryFile = Path.Combine(GetTempDirectory(), InventoryFileName);
+                    // Issue new request and serialize topic details to global file
+                    topic = SetupTopicAndSubscriptions(InventoryTopicFileName, inventoryFile); 
                     InitiateInventoryRetrieval(topic);
                     SaveTopicFile(topic);
-                    Debug.WriteLine("inventory request issued " + DateTime.Now);
-                    return new InventoryResult { Result = "Requested" };
+                    return topic.Status; // only requested - no need to process yet
+                }
+                
+                ProcessQueue(topic);
+                Debug.WriteLine(topic.Status);
+                if (topic.Status == GlacierResult.Completed)
+                {
+                    DownloadSuccess?.Invoke("Glacier Inventory was updated");
+                    Debug.WriteLine("inventory updated: " + topic.OutputPath);
                 }
 
-                // Read queue and any message
-                return ProcessQueue(topic);
+                return topic.Status;
             }
             catch (Exception ex)
             {
-                File.Delete(Path.Combine(GetTempDirectory(), InventoryTopicName));
                 BackupError?.Invoke(ex.Message);
-                return new InventoryResult { Result = "Error" };
+                return GlacierResult.Error;
             }
         }
 
-        private static Inventory GetInventoryFile()
+        /// <summary>
+        /// Get any downloaded inventory file of the Glacier vault,
+        /// build a view model with statuses of any Archive jobs and return
+        /// </summary>
+        public static ArchiveModelList GetArchiveModel()
         {
-            var inventoryFile = Path.Combine(GetTempDirectory(), InventoryName);
+            // Look for downloaded inventory
+            var inventoryFile = Path.Combine(GetTempDirectory(), InventoryFileName);
             if (File.Exists(inventoryFile))
             {
-                // Found inventory, return
+                // Found inventory, return model with the statuses of any related topics found
                 using (var file = File.Open(inventoryFile, FileMode.Open))
                 {
+                    Debug.WriteLine("Getting Archive Model");
                     var s = new DataContractJsonSerializer(typeof(Inventory));
                     var inventory = (Inventory)s.ReadObject(file);
-                    Debug.WriteLine($"Inventory Date: {inventory.InventoryDate}");
-                    return inventory;
+
+                    var model = new ArchiveModelList();
+                    foreach (var archive in inventory.ArchiveList)
+                    {
+                        var topicFile = GetArchiveTopicFileName(archive.ArchiveId);
+                        var status = GetExistingTopic(topicFile)?.Status ?? GlacierResult.Unknown;
+
+                        model.Add(new ArchiveModel
+                        {
+                            ArchiveId = archive.ArchiveId,
+                            Description = archive.ArchiveDescription,
+                            GlacierJobStatus = status,
+                            Size = archive.Size,
+                            ArchiveTopicFilePath = Path.Combine(GetTempDirectory(), topicFile)
+                        });
+                        Debug.WriteLine($"found topic: {topicFile} {status}");
+                    }
+
+                    // Delete topic files which are not related to the inventory
+                    var topicFiles = Directory.GetFiles(
+                        GetTempDirectory(), "glacier.archive*.topic", SearchOption.TopDirectoryOnly);
+                    var toDelete = from t in topicFiles
+                                   where !model.Exists(m => m.ArchiveTopicFilePath == t)
+                                   select t;
+                    // CHECK errored
+                    //|| (m.GlacierJobStatus != GlacierResult.Incomplete
+
+                    toDelete.ToList().ForEach(t =>
+                    {
+                        File.Delete(Path.Combine(GetTempDirectory(), t));
+                        Debug.WriteLine($"Deleted {t}");
+                    });
+
+                    // Update inventory model file
+                    SaveInventoryModel(model);
+                    return model;
                 }
             }
+            Debug.WriteLine("WARNING: no inventory model");
             return null;
         }
 
-        private static InventoryResult ProcessQueue(InventoryTopic topic)
+        public static void ProcessArchiveModel()
         {
+            var model = GetArchiveModel();
+            if (model != null)
+            {
+                foreach (var m in model)
+                {
+                    if (isCancelling)
+                        break;
+
+                    if (m.ArchiveTopicFilePath != null)
+                    {
+                        var topicFile = GetArchiveTopicFileName(m.ArchiveId);
+                        var topic = GetExistingTopic(topicFile);
+                        if (topic != null)
+                        {
+                            try
+                            {
+                                ProcessQueue(topic);
+                                if (topic.Status == GlacierResult.Completed)
+                                    DownloadSuccess?.Invoke($"Glacier archive was downloaded to {topic.OutputPath}");
+                            }
+                            catch (Exception ex)
+                            {
+                                DownloadError?.Invoke("An error occurred processing a Glacier job. " + ex.Message);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void SaveInventoryModel(ArchiveModelList model)
+        {
+            var formatter = new BinaryFormatter();
+            var inventoryModelFileName = Path.Combine(GetTempDirectory(), InventoryModelFileName);
+            File.Delete(inventoryModelFileName);
+            var stream = new FileStream(inventoryModelFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, model);
+            stream.Close();
+        }
+
+        public static void ProcessQueue(Topic topic)
+        {
+            // Check for notifications on topic and process any message
             try
             {
                 var settings = GetSettings();
@@ -303,63 +446,90 @@ namespace Backup.Logic
                     var receiveMessageRequest = new ReceiveMessageRequest { QueueUrl = topic.QueueUrl, MaxNumberOfMessages = 1 };
                     var sqsClient = new AmazonSQSClient(settings.AWSAccessKeyID, settings.AWSSecretAccessKey, RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
                     var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
+                    //GlacierResult result = GlacierResult.Unknown;
                     if (receiveMessageResponse.Messages.Count == 0)
                     {
-                        Debug.WriteLine("job not completed");
-                        return new InventoryResult { Result = "Incomplete" };
+                        topic.Status = GlacierResult.Incomplete;
+                        return;
                     }
-                    Debug.WriteLine("Got message");
-                    Message message = receiveMessageResponse.Messages[0];
-                    var jss = new JavaScriptSerializer();
-                    var outer = jss.Deserialize<Dictionary<string, string>>(message.Body);
-                    var fields = jss.Deserialize<Dictionary<string, object>>(outer["Message"]);
-                    string status = fields["StatusCode"] as string;
+
+                    // Process message
+                    string status = GetResponseStatus(receiveMessageResponse);
                     if (string.Equals(status, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
                     {
                         Debug.WriteLine("Downloading job output...");
-                        DownloadGlacierJobOutput(topic.JobId, client, settings.AWSGlacierVault, InventoryName);
-                        var inventory = GetInventoryFile();
-                        return new InventoryResult { Result = "OK", Inventory = inventory };
+                        DownloadGlacierJobOutput(topic.JobId, client, settings.AWSGlacierVault, topic.OutputPath);
+                        topic.Status = GlacierResult.Completed;
+                        DeleteTopic(topic);
                     }
                     else if (string.Equals(status, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        DownloadError?.Invoke("Job failed, cannot download the inventory");
-                        return new InventoryResult { Result = "Job Failed" };
+                        DownloadError?.Invoke("Job failed, cannot download the file");
+                        topic.Status = GlacierResult.JobFailed;
+                        DeleteTopic(topic);
                     }
                     else if (string.Equals(status, GlacierUtils.JOB_STATUS_INPROGRESS, StringComparison.InvariantCultureIgnoreCase))
                     {
                         DownloadWarning?.Invoke("Job in progress");
-                        return new InventoryResult { Result = "Job in progress" };
+                        topic.Status = GlacierResult.JobInProgress;
+                        // TOOD delete topic?
                     }
-                    throw new ApplicationException("unknown job status");
+                    else
+                    {
+                        topic.Status = GlacierResult.Error;
+                        DeleteTopic(topic);
+                    }
                 }
+            }
+            catch (AmazonServiceException azex)
+            {
+                Debug.WriteLine("AmazonServiceException " + azex.Message);
+                throw azex;
             }
             catch (Exception ex)
             {
-                DownloadError?.Invoke(ex.Message);
+                DeleteTopic(topic);
                 throw ex;
-            }
-            finally
-            {
-                var settings = GetSettings();
-                var snsClient = new AmazonSimpleNotificationServiceClient(
-                    settings.AWSAccessKeyID,
-                    settings.AWSSecretAccessKey,
-                    RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
-
-                var sqsClient = new AmazonSQSClient(
-                    settings.AWSAccessKeyID,
-                    settings.AWSSecretAccessKey,
-                    RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
-
-                //sqsClient.DeleteMessage(new DeleteMessageRequest { QueueUrl = topic.QueueUrl, ReceiptHandle = message.ReceiptHandle });
-                // Delete SNS topic and SQS queue.
-                snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = topic.TopicARN });
-                sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = topic.QueueUrl });
             }
         }
 
-        private static void DownloadGlacierJobOutput(string jobId, AmazonGlacierClient client, string vaultName, string fileName)
+        private static void DeleteTopic(Topic topic)
+        {
+            var settings = GetSettings();
+            var snsClient = new AmazonSimpleNotificationServiceClient(
+                settings.AWSAccessKeyID,
+                settings.AWSSecretAccessKey,
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+
+            var sqsClient = new AmazonSQSClient(
+                settings.AWSAccessKeyID,
+                settings.AWSSecretAccessKey,
+                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+
+            // Cleanup topic & queue & local file
+            try { snsClient.DeleteTopic(new DeleteTopicRequest() { TopicArn = topic.TopicARN }); } catch (Exception ex) { Debug.WriteLine(ex.Message); }
+            try { sqsClient.DeleteQueue(new DeleteQueueRequest() { QueueUrl = topic.QueueUrl }); } catch (Exception ex) { Debug.WriteLine(ex.Message); }
+            // TODO Delete the errored/complete files on startup?
+            File.Delete(Path.Combine(GetTempDirectory(), topic.TopicFileName));
+            Debug.WriteLine($"Deleted topic {topic.TopicARN}");
+            Debug.WriteLine($"Deleted topic file {topic.TopicFileName}");
+        }
+
+        private static string GetResponseStatus(ReceiveMessageResponse receiveMessageResponse)
+        {
+            Message message = receiveMessageResponse.Messages[0];
+            var jss = new JavaScriptSerializer();
+            var outer = jss.Deserialize<Dictionary<string, string>>(message.Body);
+            var fields = jss.Deserialize<Dictionary<string, object>>(outer["Message"]);
+            string status = fields["StatusCode"] as string;
+            return status;
+        }
+
+        private static void DownloadGlacierJobOutput(
+            string jobId, 
+            AmazonGlacierClient client, 
+            string vaultName, 
+            string filePath)
         {
             var getJobOutputRequest = new GetJobOutputRequest
             {
@@ -370,8 +540,7 @@ namespace Backup.Logic
             var getJobOutputResponse = client.GetJobOutput(getJobOutputRequest);
             using (Stream webStream = getJobOutputResponse.Body)
             {
-                var file = Path.Combine(GetTempDirectory(), fileName);
-                using (Stream fileToSave = File.OpenWrite(file))
+                using (Stream fileToSave = File.Create(filePath))
                 {
                     CopyStream(webStream, fileToSave);
                 }
@@ -388,7 +557,7 @@ namespace Backup.Logic
             }
         }
 
-        private static void InitiateInventoryRetrieval(InventoryTopic topic)
+        private static void InitiateInventoryRetrieval(Topic topic)
         {
             // Make the call to AWS Glacier to get inventory
             var settings = GetSettings();
@@ -397,10 +566,10 @@ namespace Backup.Logic
                         settings.AWSSecretAccessKey,
                         RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
             {
-                var initJobRequest = new InitiateJobRequest()
+                var initJobRequest = new InitiateJobRequest
                 {
                     VaultName = settings.AWSGlacierVault,
-                    JobParameters = new JobParameters()
+                    JobParameters = new JobParameters
                     {
                         Type = "inventory-retrieval",
                         Description = "This job is to download a vault inventory.",
@@ -408,12 +577,14 @@ namespace Backup.Logic
                     }
                 };
 
+                Debug.WriteLine("Job: " + initJobRequest.JobParameters.Type);
                 var initJobResponse = client.InitiateJob(initJobRequest);
                 topic.JobId = initJobResponse.JobId;
+                topic.Status = GlacierResult.InventoryRequested;
             }
         }
 
-        public static void InitiateArchiveRetrieval(string topicARN, string archiveId)
+        private static void InitiateArchiveRetrieval(Topic topic, string archiveId)
         {
             // Make the call to AWS Glacier to get archive
             var settings = GetSettings();
@@ -422,26 +593,27 @@ namespace Backup.Logic
                         settings.AWSSecretAccessKey,
                         RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
             {
-                InitiateJobRequest initJobRequest = new InitiateJobRequest()
+                InitiateJobRequest initJobRequest = new InitiateJobRequest
                 {
                     VaultName = settings.AWSGlacierVault,
-                    JobParameters = new JobParameters()
+                    JobParameters = new JobParameters
                     {
                         Type = "archive-retrieval",
                         ArchiveId = archiveId,
-                        SNSTopic = topicARN,
+                        SNSTopic = topic.TopicARN,
                     }
                 };
 
+                Debug.WriteLine("Job: " + initJobRequest.JobParameters.Type);
                 InitiateJobResponse initJobResponse = client.InitiateJob(initJobRequest);
-                string jobId = initJobResponse.JobId;
+                topic.JobId = initJobResponse.JobId;
+                topic.Status = GlacierResult.DownloadRequested;
             }
         }
 
-
-        private static InventoryTopic SetupTopicAndSubscriptions()
+        private static Topic SetupTopicAndSubscriptions(string topicFileName, string outputPath)
         {
-            var inventoryTopic = new InventoryTopic();
+            var topic = new Topic { TopicFileName = topicFileName, OutputPath = outputPath };
             long ticks = DateTime.Now.Ticks;
             var settings = GetSettings();
 
@@ -458,7 +630,7 @@ namespace Backup.Logic
 
             var topicArn = snsClient.CreateTopic(new CreateTopicRequest { Name = "GlacierDownload-" + ticks }).TopicArn;
             Debug.WriteLine($"topicArn: {topicArn}");
-            inventoryTopic.TopicARN = topicArn;
+            topic.TopicARN = topicArn;
             #endregion
 
             #region Setup SQS queue
@@ -466,7 +638,7 @@ namespace Backup.Logic
             var createQueueResponse = sqsClient.CreateQueue(createQueueRequest);
             var queueUrl = createQueueResponse.QueueUrl;
             Debug.WriteLine($"QueueURL: {queueUrl}");
-            inventoryTopic.QueueUrl = queueUrl;
+            topic.QueueUrl = queueUrl;
 
             var getQueueAttributesRequest = new GetQueueAttributesRequest
             {
@@ -476,7 +648,7 @@ namespace Backup.Logic
             var response = sqsClient.GetQueueAttributes(getQueueAttributesRequest);
             var queueArn = response.QueueARN;
             Debug.WriteLine($"QueueArn: {queueArn}");
-            inventoryTopic.QueueARN = queueArn;
+            topic.QueueARN = queueArn;
             #endregion
 
             // Setup the Amazon SNS topic to publish to the SQS queue.
@@ -500,7 +672,7 @@ namespace Backup.Logic
                     }
             });
 
-            return inventoryTopic;
+            return topic;
         }
 
         private static string CheckFilePath(DownloadObjectInfo info)
@@ -585,7 +757,7 @@ namespace Backup.Logic
 
         public static void SaveDiscoveredFiles(IEnumerable<FileDetail> fileDetails)
         {
-            var discoFile = Path.Combine(GetTempDirectory(), DiscoveredName);
+            var discoFile = Path.Combine(GetTempDirectory(), DiscoveredFileName);
 
             if (File.Exists(discoFile))
                 File.Delete(discoFile);
@@ -601,7 +773,7 @@ namespace Backup.Logic
         {
             string tempDir = GetTempDirectory();
 
-            var sourcesPath = Path.Combine(tempDir, SourcesName);
+            var sourcesPath = Path.Combine(tempDir, SourcesFileName);
             if (!File.Exists(sourcesPath))
             {
                 using (var writer = File.CreateText(sourcesPath))
@@ -650,7 +822,7 @@ namespace Backup.Logic
             var settings = GetSettings();
             var tempDir = GetTempDirectory();
 
-            var filesName = Path.Combine(tempDir, DiscoveredName);
+            var filesName = Path.Combine(tempDir, DiscoveredFileName);
             if (!File.Exists(filesName))
             {
                 BackupWarning?.Invoke("No new or modified files were discovered");

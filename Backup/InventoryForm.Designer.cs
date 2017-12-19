@@ -35,9 +35,10 @@
             this.FilesList = new System.Windows.Forms.ListView();
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.size = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.archiveId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.status = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Download = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-            this.Refresh = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,7 +46,7 @@
             // 
             this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(352, 348);
+            this.CloseForm.Location = new System.Drawing.Point(547, 325);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -57,7 +58,7 @@
             // 
             this.Message.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Message.AutoSize = true;
-            this.Message.Location = new System.Drawing.Point(15, 322);
+            this.Message.Location = new System.Drawing.Point(15, 330);
             this.Message.Name = "Message";
             this.Message.Size = new System.Drawing.Size(56, 13);
             this.Message.TabIndex = 11;
@@ -71,7 +72,7 @@
             this.groupBox1.Controls.Add(this.FilesList);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(421, 305);
+            this.groupBox1.Size = new System.Drawing.Size(616, 307);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Contents";
@@ -83,11 +84,13 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FilesList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.file,
-            this.size});
+            this.size,
+            this.archiveId,
+            this.status});
             this.FilesList.Location = new System.Drawing.Point(6, 19);
             this.FilesList.MultiSelect = false;
             this.FilesList.Name = "FilesList";
-            this.FilesList.Size = new System.Drawing.Size(409, 280);
+            this.FilesList.Size = new System.Drawing.Size(604, 282);
             this.FilesList.TabIndex = 0;
             this.FilesList.UseCompatibleStateImageBehavior = false;
             this.FilesList.View = System.Windows.Forms.View.Details;
@@ -95,19 +98,29 @@
             // 
             // file
             // 
-            this.file.Text = "File";
-            this.file.Width = 263;
+            this.file.Text = "Archive Description";
+            this.file.Width = 212;
             // 
             // size
             // 
             this.size.Text = "Size (Bytes)";
-            this.size.Width = 139;
+            this.size.Width = 112;
+            // 
+            // archiveId
+            // 
+            this.archiveId.Text = "Archive ID";
+            this.archiveId.Width = 152;
+            // 
+            // status
+            // 
+            this.status.Text = "Status";
+            this.status.Width = 121;
             // 
             // Download
             // 
             this.Download.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Download.Enabled = false;
-            this.Download.Location = new System.Drawing.Point(256, 348);
+            this.Download.Location = new System.Drawing.Point(451, 325);
             this.Download.Name = "Download";
             this.Download.Size = new System.Drawing.Size(75, 23);
             this.Download.TabIndex = 12;
@@ -115,22 +128,11 @@
             this.Download.UseVisualStyleBackColor = true;
             this.Download.Click += new System.EventHandler(this.Download_Click);
             // 
-            // Refresh
-            // 
-            this.Refresh.Location = new System.Drawing.Point(18, 348);
-            this.Refresh.Name = "Refresh";
-            this.Refresh.Size = new System.Drawing.Size(75, 23);
-            this.Refresh.TabIndex = 13;
-            this.Refresh.Text = "Refresh";
-            this.Refresh.UseVisualStyleBackColor = true;
-            this.Refresh.Click += new System.EventHandler(this.Refresh_Click);
-            // 
             // InventoryForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(445, 383);
-            this.Controls.Add(this.Refresh);
+            this.ClientSize = new System.Drawing.Size(640, 360);
             this.Controls.Add(this.Download);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.Message);
@@ -139,7 +141,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "InventoryForm";
-            this.Text = "Archive List";
+            this.Text = "Glacier Inventory";
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -156,6 +158,7 @@
         private System.Windows.Forms.Button Download;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.ColumnHeader size;
-        private System.Windows.Forms.Button Refresh;
+        private System.Windows.Forms.ColumnHeader archiveId;
+        private System.Windows.Forms.ColumnHeader status;
     }
 }

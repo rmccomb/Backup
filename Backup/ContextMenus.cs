@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using Backup.Properties;
 using Backup.Logic;
 using System.Configuration;
+using System.Threading;
 
 namespace Backup
 {
@@ -15,11 +16,14 @@ namespace Backup
         DestinationForm destinationForm;
         FileListForm fileListForm;
         NotifyIcon icon;
+        CancellationTokenSource cts;
 
         public ContextMenuStrip Create(NotifyIcon icon)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
             this.icon = icon;
+            cts = new CancellationTokenSource();
+            cts.Token.Register(() => FileManager.Cancel());
 
             var exit = new ToolStripMenuItem();
             exit.Text = "Exit";
@@ -32,14 +36,7 @@ namespace Backup
             var configure = new ToolStripMenuItem();
             configure.Text = "Configure...";
             configure.Click += new EventHandler(Configure_Click);
-            //configure.Image = Resources.save_16xMD;
             menu.Items.Add(configure);
-
-            //var archive = new ToolStripMenuItem();
-            //archive.Text = "Archive...";
-            //archive.Click += new EventHandler(Archive_Click);
-            //archive.Image = Resources.Cloud_16x;
-            //menu.Items.Add(archive);
 
             var item = new ToolStripMenuItem();
             item.Text = "Discover files...";
@@ -115,6 +112,8 @@ namespace Backup
 
         private void Exit_Click(object sender, EventArgs e)
         {
+            this.cts.Cancel();
+            this.cts.Dispose();
             this.icon.Visible = false;
             Application.Exit();
         }

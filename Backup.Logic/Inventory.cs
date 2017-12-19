@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace Backup.Logic
@@ -21,25 +22,6 @@ namespace Backup.Logic
     /// <summary>
     /// AWS Glacier Inventory (JSON)
     /// </summary>
-    //\"InventoryRetrievalParameters\"
-    //    :{\"EndDate\":null,
-    //      \"Format\":\"JSON\",
-    //      \"Limit\":null,
-    //      \"Marker\":null,
-    //      \"StartDate\":null
-    //    },
-    //    \"InventorySizeInBytes\":811,
-    //    \"JobDescription\":\"This job is to download a vault inventory.\",
-    //    \"JobId\":\"gz4vCTUTRazp_2II86GPgWY-FEneRCEuRq8hBhueN2Dtxoaa17Om-c1wJ8egVAfdwN5kgOyEdR6_y_mRE3AROz4fzQMf\",
-    //    \"RetrievalByteRange\":null,
-    //    \"SHA256TreeHash\":null,
-    //    \"SNSTopic\":\"arn:aws:sns:ap-southeast-2:019910574325:GlacierDownload-636484317871706400\",
-    //    \"StatusCode\":\"Succeeded\",
-    //    \"StatusMessage\":\"Succeeded\",
-    //    \"Tier\":null,
-    //    \"VaultARN\":\"arn:aws:glacier:ap-southeast-2:019910574325:vaults/rmccomb-backup\"
-    //    }",
-
     [DataContract]
     public class Inventory
     {
@@ -49,10 +31,20 @@ namespace Backup.Logic
         public Archive[] ArchiveList { get; set; }
     }
 
-    public class InventoryResult
+    [Serializable]
+    public class ArchiveModel
     {
-        public string Result { get; set; }
-        public Inventory Inventory { get; set; }
-
+        public string Description { get; set; }
+        public int Size { get; set; }
+        public string ArchiveId { get; set; }
+        public GlacierResult GlacierJobStatus { get; set; }
+        public string ArchiveTopicFilePath { get; set; }
     }
+
+    [Serializable]
+    public class ArchiveModelList : List<ArchiveModel>
+    {
+        public string InventoryDate { get; set; }
+    }
+
 }

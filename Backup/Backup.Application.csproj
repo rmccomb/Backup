@@ -56,11 +56,11 @@
     <Compile Include="InventoryForm.Designer.cs">
       <DependentUpon>InventoryForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ArchiveContentsForm.cs">
+    <Compile Include="BucketContentsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ArchiveContentsForm.Designer.cs">
-      <DependentUpon>ArchiveContentsForm.cs</DependentUpon>
+    <Compile Include="BucketContentsForm.Designer.cs">
+      <DependentUpon>BucketContentsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ConfigureForm.cs">
       <SubType>Form</SubType>
@@ -105,8 +105,8 @@
     <EmbeddedResource Include="InventoryForm.resx">
       <DependentUpon>InventoryForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ArchiveContentsForm.resx">
-      <DependentUpon>ArchiveContentsForm.cs</DependentUpon>
+    <EmbeddedResource Include="BucketContentsForm.resx">
+      <DependentUpon>BucketContentsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ConfigureForm.resx">
       <DependentUpon>ConfigureForm.cs</DependentUpon>

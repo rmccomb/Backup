@@ -22,7 +22,7 @@ namespace Backup
         {
             this.Dispose();
         }
-
+        
         public void Display()
         {
             // Put the icon in the system tray and allow it react to mouse clicks.          

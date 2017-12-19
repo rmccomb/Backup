@@ -65,11 +65,11 @@
     <Compile Include="DownloadObject.cs" />
     <Compile Include="FileDetail.cs" />
     <Compile Include="FileManager.cs" />
+    <Compile Include="GlacierResult.cs" />
     <Compile Include="Inventory.cs" />
-    <Compile Include="InventoryTopic.cs" />
-    <Compile Include="MessageBody.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source.cs" />
+    <Compile Include="Topic.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

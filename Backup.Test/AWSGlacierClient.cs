@@ -144,7 +144,7 @@ namespace Backup.Test
         [TestMethod]
         public void DeserialiseJson()
         {
-            var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
+            var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryFileName);
             if (File.Exists(inventoryFile))
             {
                 // Found inventory 

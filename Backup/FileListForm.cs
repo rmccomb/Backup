@@ -68,7 +68,7 @@ namespace Backup
                     this.FilesList.Items.RemoveAt(i));
 
             FileManager.SaveDiscoveredFiles(
-                (from ListViewItem item in this.FilesList.Items select new FileDetail(item.Text, item.SubItems[1].Text)).ToArray());
+                (from ListViewItem item in FilesList.Items select new FileDetail(item.Text, item.SubItems[1].Text)).ToArray());
         }
     }
 }

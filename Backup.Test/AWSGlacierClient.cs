@@ -9,6 +9,10 @@ using Backup.Logic;
 using Amazon;
 using System.IO;
 using System.Runtime.Serialization.Json;
+using Amazon.SQS.Model;
+using Amazon.SQS;
+using System.Web.Script.Serialization;
+using System.Collections.Generic;
 
 namespace Backup.Test
 {
@@ -121,26 +125,6 @@ namespace Backup.Test
             } while (lastMarker != null);
         }
 
-        //[TestMethod]
-        //public void ReadInventoryFile()
-        //{
-        //    var inventoryFile = Path.Combine(FileManager.GetTempDirectory(), FileManager.InventoryName);
-        //    if (File.Exists(inventoryFile))
-        //    {
-        //        // Found inventory 
-        //        using (StreamReader file = File.OpenText(inventoryFile))
-        //        {
-        //            var text = File.ReadAllText(inventoryFile);
-        //            //Debug.WriteLine(JsonConvert.DeserializeObject<Inventory>(text));
-        //            //Debug.WriteLine(JsonConvert.DeserializeObject(text));
-        //            var inventory = new Inventory();
-        //            JsonConvert.PopulateObject(text, inventory);
-        //            Debug.WriteLine(inventory);
-        //        }
-
-        //    }
-        //}
-
         [TestMethod]
         public void DeserialiseJson()
         {
@@ -156,6 +140,86 @@ namespace Backup.Test
                 }
             }
 
+        }
+
+        [TestMethod]
+        public void ProcessTopic()
+        {
+            var model = FileManager.GetArchiveModel();
+
+            foreach (var m in model)
+            {
+                if (m.ArchiveTopicFilePath != null)
+                {
+                    var topicFile = FileManager.GetArchiveTopicFileName(m.ArchiveId);
+                    var topic = FileManager.GetExistingTopic(topicFile);
+                    if (topic != null)
+                    {
+                        var result = ProcessQueue(topic);
+                        //if (result == GlacierResult.Completed)
+                        //    DownloadSuccess?.Invoke($"Glacier archive was downloaded to {topic.GetOutputFile()}");
+                    }
+                }
+            }
+        }
+
+        public static GlacierResult ProcessQueue(Topic topic)
+        {
+            // Check for notifications on topic and process any message
+            try
+            {
+                var settings = FileManager.GetSettings();
+                using (var client = new AmazonGlacierClient(
+                            settings.AWSAccessKeyID,
+                            settings.AWSSecretAccessKey,
+                            RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+                {
+                    var receiveMessageRequest = new ReceiveMessageRequest { QueueUrl = topic.QueueUrl, MaxNumberOfMessages = 1 };
+                    var sqsClient = new AmazonSQSClient(settings.AWSAccessKeyID, settings.AWSSecretAccessKey, RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+                    var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
+                    if (receiveMessageResponse.Messages.Count == 0)
+                    {
+                        return GlacierResult.Incomplete;
+                    }
+
+                    // Process message
+                    string status = GetResponseStatus(receiveMessageResponse);
+                    if (string.Equals(status, GlacierUtils.JOB_STATUS_SUCCEEDED, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        FileManager.DownloadGlacierJobOutput(topic.JobId, client, settings.AWSGlacierVault, topic.GetOutputFile());
+                        Debug.WriteLine($"Downloaded job output to {topic.GetOutputFile()}");
+                        return GlacierResult.Completed;
+                    }
+                    else if (string.Equals(status, GlacierUtils.JOB_STATUS_FAILED, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return GlacierResult.JobFailed;
+                    }
+                    else if (string.Equals(status, GlacierUtils.JOB_STATUS_INPROGRESS, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return GlacierResult.JobInProgress;
+                    }
+                    else
+                    {
+                        return GlacierResult.Error;
+                    }
+                }
+            }
+            catch (AmazonServiceException azex)
+            {
+                Debug.WriteLine("AmazonServiceException " + azex.Message);
+                throw azex;
+            }
+        }
+
+        private static string GetResponseStatus(ReceiveMessageResponse receiveMessageResponse)
+        {
+            Message message = receiveMessageResponse.Messages[0];
+            var jss = new JavaScriptSerializer();
+            var outer = jss.Deserialize<Dictionary<string, string>>(message.Body);
+            var fields = jss.Deserialize<Dictionary<string, object>>(outer["Message"]);
+            string status = fields["StatusCode"] as string;
+            Debug.WriteLine("Message status: " + status);
+            return status;
         }
     }
 }

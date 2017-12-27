@@ -1,5 +1,6 @@
 ﻿using Backup.Logic;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -7,7 +8,7 @@ namespace Backup
 {
     public partial class InventoryForm : Form
     {
-        string downloadPath;
+        string downloadDirectory;
         public InventoryForm()
         {
             InitializeComponent();
@@ -23,18 +24,19 @@ namespace Backup
 
         private async void Download_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(this.downloadPath))
-                this.downloadPath = FileManager.GetTempDirectory();
+            if (String.IsNullOrEmpty(this.downloadDirectory))
+                this.downloadDirectory = FileManager.GetTempDirectory();
 
-            this.folderBrowserDialog1.SelectedPath = this.downloadPath;
+            this.folderBrowserDialog1.SelectedPath = this.downloadDirectory;
             if (this.folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
+                var description = FilesList.SelectedItems[0].SubItems[0].Text;
                 var archiveId = FilesList.SelectedItems[0].SubItems[2].Text;
-                this.downloadPath = folderBrowserDialog1.SelectedPath;
+                this.downloadDirectory = folderBrowserDialog1.SelectedPath;
                 
                 // Make the request
                 var result = await Task.Run(() 
-                    => FileManager.RequestGlacierArchive(archiveId, this.downloadPath));
+                    => FileManager.RequestGlacierArchive(archiveId, this.downloadDirectory, description));
                 
                 //CreateMessage(result);
                 PopulateControls();
@@ -61,34 +63,28 @@ namespace Backup
                         item.Description,
                         item.Size.ToString(),
                         item.ArchiveId,
-                        item.GlacierJobStatus.ToString()}));
+                        CreateMessage(item.GlacierJobStatus)
+                    }));
             }
             this.Message.Text = $"Inventory as at {inventory.InventoryDate}";
+            this.Download.Enabled = false;
         }
 
-        private void CreateMessage(GlacierResult result)
+        private string CreateMessage(GlacierResult result)
         {
             switch (result)
             {
                 case GlacierResult.Completed:
-                    this.Message.Text = "Glacier job completed";
-                    break;
+                    return "Completed";
                 case GlacierResult.Error:
                 case GlacierResult.JobFailed:
-                    this.Message.Text = "An error occurred";
-                    break;
+                    return "Failed";
                 case GlacierResult.DownloadRequested:
-                    this.Message.Text = "A Glacier download job was requested";
-                    break;
                 case GlacierResult.InventoryRequested:
-                    this.Message.Text = "A Glacier inventory job was requested";
-                    break;
                 case GlacierResult.Incomplete:
-                    this.Message.Text = "Waiting for Glacier update";
-                    break;
+                    return "Requested";
                 default:
-                    this.Message.Text = "";
-                    break;
+                    return "";
             }
         }
 
@@ -102,7 +98,11 @@ namespace Backup
             // TODO check status of any existing job
             // 
             if (this.FilesList.SelectedItems.Count > 0)
-                this.Download.Enabled = true;
+            {
+                //Debug.WriteLine(this.FilesList.SelectedItems[0].SubItems);
+                if (this.FilesList.SelectedItems[0].SubItems[3].Text == "")
+                    this.Download.Enabled = true;
+            }
             else
                 this.Download.Enabled = false;
         }

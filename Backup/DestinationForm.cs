@@ -206,7 +206,7 @@ namespace Backup
             {
                 Text = this.settings.AWSGlacierVault
             };
-            dlg.Show();
+            dlg.ShowDialog();
         }
     }
 }

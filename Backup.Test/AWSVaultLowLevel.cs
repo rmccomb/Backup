@@ -119,7 +119,7 @@ namespace Backup.Test
                     RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
                 {
                     this.queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/019910574325/GlacierDownload-636484317871706400";
-                    var jobId = "gz4vCTUTRazp_2II86GPgWY-FEneRCEuRq8hBhueN2Dtxoaa17Om-c1wJ8egVAfdwN5kgOyEdR6_y_mRE3AROz4fzQMf";
+                    var jobId = "CoKrkkPEkU7tWsG-QTwZSo0IAILtcgQpyr-t12N0APrijD-QWMIUtK-PFdT_ywKh4A0_SkHU_8NcQAg77L1DVddBTIO7";
                     ProcessQueue(jobId, client);
                 }
 
@@ -212,8 +212,7 @@ namespace Backup.Test
                     var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
                     if (receiveMessageResponse.Messages.Count == 0)
                     {
-                        Thread.Sleep(10000 * 60);
-                        continue;
+                        break;
                     }
                     Debug.WriteLine("Got message");
                     Message message = receiveMessageResponse.Messages[0];

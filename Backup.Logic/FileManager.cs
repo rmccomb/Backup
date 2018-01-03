@@ -117,7 +117,7 @@ namespace Backup.Logic
             return tempDir;
         }
 
-        public static void SaveSettings(DestinationSettings settings)
+        public static void SaveSettings(Settings settings)
         {
             var formatter = new BinaryFormatter();
             var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
@@ -127,14 +127,14 @@ namespace Backup.Logic
             stream.Close();
         }
 
-        public static DestinationSettings GetSettings()
+        public static Settings GetSettings()
         {
             var formatter = new BinaryFormatter();
             var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
             if (!File.Exists(settingsFileName))
-                SaveSettings(new DestinationSettings());
+                SaveSettings(new Settings());
             var stream = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-            var settings = (DestinationSettings)formatter.Deserialize(stream);
+            var settings = (Settings)formatter.Deserialize(stream);
             stream.Close();
             return settings;
         }
@@ -177,7 +177,8 @@ namespace Backup.Logic
                  select new Source(
                     path: l.Split(',')[0].Trim(),
                     pattern: l.Split(',')[1].Trim(),
-                    lastBackup: DateTime.Parse(l.Split(',')[2].Trim()))
+                    modifiedOnly: l.Split(',')[2].Trim(),
+                    lastBackup: DateTime.Parse(l.Split(',')[3].Trim()))
                  ));
         }
 
@@ -482,7 +483,7 @@ namespace Backup.Logic
             catch (AmazonServiceException azex)
             {
                 Debug.WriteLine("AmazonServiceException " + azex.Message);
-                //DeleteTopic(topic);
+                DeleteTopic(topic);
                 throw azex;
             }
             catch (Exception ex)
@@ -737,11 +738,12 @@ namespace Backup.Logic
             List<Source> sources,
             string tempDir = null)
         {
+            var settings = GetSettings();
             var files = new List<FileDetail>();
 
             sources.ForEach(s =>
             {
-                files.AddRange(GetChangedFiles(s.Directory, s.Pattern, s.LastBackup));
+                files.AddRange(GetFiles(s.Directory, s.Pattern, s.IsModifiedOnly, s.LastBackup));
             });
 
             return files;
@@ -754,19 +756,27 @@ namespace Backup.Logic
         /// <param name="pattern">File extension e.g. *.*</param>
         /// <param name="fromDate">The date of the last backup</param>
         /// <returns>List of files</returns>
-        static public IEnumerable<FileDetail> GetChangedFiles(
+        static private IEnumerable<FileDetail> GetFiles(
             string directory,
             string pattern,
+            bool isModifiedOnly,
             DateTime fromDate)
         {
             var changed = new List<FileDetail>();
             var files = Directory.GetFiles(directory, pattern, SearchOption.AllDirectories);
 
-            foreach (var file in files)
+            if(isModifiedOnly)
             {
-                var lastWrite = File.GetLastWriteTime(file);
-                if (fromDate < lastWrite)
-                    changed.Add(new FileDetail(file, directory));
+                foreach (var file in files)
+                {
+                    var lastWrite = File.GetLastWriteTime(file);
+                    if (fromDate < lastWrite)
+                        changed.Add(new FileDetail(file, directory));
+                }
+            }
+            else
+            {
+                changed.AddRange(files.Select(f => new FileDetail(f, directory)));
             }
 
             return changed;
@@ -795,13 +805,13 @@ namespace Backup.Logic
             {
                 using (var writer = File.CreateText(sourcesPath))
                 {
-                    writer.WriteLine("Directory, Pattern, LastBackup");
+                    writer.WriteLine("Directory, Pattern, ModifiedOnly, LastBackup");
 
                     if (sources != null)
                     {
                         sources.ForEach(s =>
                         {
-                            writer.WriteLine($"{s.Directory}, {s.Pattern}, {s.LastBackup.ToString()}");
+                            writer.WriteLine($"{s.Directory}, {s.Pattern}, {s.ModifiedOnly}, {s.LastBackup.ToString()}");
                         });
                     }
 
@@ -890,7 +900,7 @@ namespace Backup.Logic
             }
         }
 
-        private static void UploadGlacierArchive(DestinationSettings settings, string zipArchivePath)
+        private static void UploadGlacierArchive(Settings settings, string zipArchivePath)
         {
             var manager = new ArchiveTransferManager(
                 settings.AWSAccessKeyID,
@@ -918,7 +928,7 @@ namespace Backup.Logic
             Debug.WriteLine($"Uploaded {e.PercentDone}");
         }
 
-        private static void UploadS3Archive(DestinationSettings settings, string zipPath)
+        private static void UploadS3Archive(Settings settings, string zipPath)
         {
             var transferUtility = new TransferUtility(
                 settings.AWSAccessKeyID, 

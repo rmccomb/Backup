@@ -46,7 +46,7 @@ namespace Backup.Test
         [TestClass]
         public class VaultInventoryJobLowLevelUsingSNSSQS
         {
-            DestinationSettings settings;
+            Settings settings;
             string topicArn;
             string queueUrl;
             string queueArn;

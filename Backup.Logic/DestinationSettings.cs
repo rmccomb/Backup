@@ -5,7 +5,7 @@ using System.IO;
 namespace Backup.Logic
 {
     [Serializable]
-    public class DestinationSettings
+    public class Settings
     {
         string fileSystemDirectory;
         public string FileSystemDirectory

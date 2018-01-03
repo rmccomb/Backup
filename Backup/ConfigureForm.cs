@@ -24,7 +24,12 @@ namespace Backup
             var sources = FileManager.GetSources();
             foreach (var source in sources)
             {
-                Sources.Items.Add(new ListViewItem(new string[] { source.Directory, source.Pattern, source.LastBackupText }));
+                Sources.Items.Add(
+                    new ListViewItem(new string[] {
+                        source.Directory,
+                        source.Pattern,
+                        source.ModifiedOnly,
+                        source.LastBackupText }));
             }
             Sources.EndUpdate();
         }
@@ -36,7 +41,8 @@ namespace Backup
             if (result == DialogResult.OK)
             {
                 var vals = editSource.GetValues();
-                Sources.Items.Add(new ListViewItem(new string[] { vals.Item1, vals.Item2, Source.NeverText }));
+                Sources.Items.Add(
+                    new ListViewItem(new string[] { vals.Item1, vals.Item2, vals.Item3, Source.NeverText }));
             }
 
             SaveSources();
@@ -45,7 +51,21 @@ namespace Backup
         private void Edit_Click(object sender, EventArgs e)
         {
             var item = this.Sources.SelectedItems[0];
-            var result = new EditSource(item).ShowDialog();
+            var editSource = new EditSource(item);
+            var result = editSource.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                var vals = editSource.GetValues();
+                var idx = Sources.Items.IndexOf(item);
+                //Sources.Items[idx].Text = vals.Item1;
+                Sources.Items[idx].SubItems[0].Text = vals.Item1;
+                Sources.Items[idx].SubItems[1].Text = vals.Item2;
+                Sources.Items[idx].SubItems[2].Text = vals.Item3;
+                // Not setting date here
+
+                SaveSources();
+                PopulateControls();
+            }
         }
 
         private void Remove_Click(object sender, EventArgs e)
@@ -91,8 +111,9 @@ namespace Backup
         {
             var toSave = new List<Source>();
             foreach (ListViewItem item in this.Sources.Items)
-                toSave.Add(
-                    new Source(item.SubItems[0].Text, item.SubItems[1].Text, item.SubItems[2].Text));
+                toSave.Add(new Source(
+                        item.SubItems[0].Text, item.SubItems[1].Text, 
+                        item.SubItems[2].Text, item.SubItems[3].Text));
 
             FileManager.SaveSources(toSave);
         }

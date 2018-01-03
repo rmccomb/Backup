@@ -8,7 +8,7 @@ namespace Backup
 {
     public partial class DestinationForm : Form
     {
-        private DestinationSettings settings;
+        private Settings settings;
         private string _awsSecretKey;
 
         public DestinationForm()
@@ -169,7 +169,7 @@ namespace Backup
 
         private void SaveSettings()
         {
-            this.settings = new DestinationSettings
+            this.settings = new Settings
             {
                 FileSystemDirectory = this.ArchivePath.Text,
                 IsFileSystemEnabled = this.IsFileSystem.Checked,

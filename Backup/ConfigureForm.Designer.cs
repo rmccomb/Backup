@@ -32,6 +32,7 @@
             this.Sources = new System.Windows.Forms.ListView();
             this.Directory = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Pattern = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.modifiedOnly = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lastBackupDate = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.New = new System.Windows.Forms.Button();
             this.Edit = new System.Windows.Forms.Button();
@@ -50,12 +51,13 @@
             this.Sources.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.Directory,
             this.Pattern,
+            this.modifiedOnly,
             this.lastBackupDate});
             this.Sources.FullRowSelect = true;
             this.Sources.Location = new System.Drawing.Point(6, 19);
             this.Sources.MultiSelect = false;
             this.Sources.Name = "Sources";
-            this.Sources.Size = new System.Drawing.Size(588, 169);
+            this.Sources.Size = new System.Drawing.Size(661, 169);
             this.Sources.TabIndex = 0;
             this.Sources.UseCompatibleStateImageBehavior = false;
             this.Sources.View = System.Windows.Forms.View.Details;
@@ -69,16 +71,21 @@
             // Pattern
             // 
             this.Pattern.Text = "Pattern";
-            this.Pattern.Width = 50;
+            this.Pattern.Width = 53;
+            // 
+            // modifiedOnly
+            // 
+            this.modifiedOnly.Text = "Modified Only";
+            this.modifiedOnly.Width = 83;
             // 
             // lastBackupDate
             // 
             this.lastBackupDate.Text = "Last Backup";
-            this.lastBackupDate.Width = 143;
+            this.lastBackupDate.Width = 138;
             // 
             // New
             // 
-            this.New.Location = new System.Drawing.Point(339, 194);
+            this.New.Location = new System.Drawing.Point(411, 195);
             this.New.Name = "New";
             this.New.Size = new System.Drawing.Size(77, 23);
             this.New.TabIndex = 1;
@@ -89,7 +96,7 @@
             // Edit
             // 
             this.Edit.Enabled = false;
-            this.Edit.Location = new System.Drawing.Point(422, 194);
+            this.Edit.Location = new System.Drawing.Point(494, 195);
             this.Edit.Name = "Edit";
             this.Edit.Size = new System.Drawing.Size(77, 23);
             this.Edit.TabIndex = 2;
@@ -100,7 +107,7 @@
             // Delete
             // 
             this.Delete.Enabled = false;
-            this.Delete.Location = new System.Drawing.Point(507, 194);
+            this.Delete.Location = new System.Drawing.Point(579, 195);
             this.Delete.Name = "Delete";
             this.Delete.Size = new System.Drawing.Size(77, 23);
             this.Delete.TabIndex = 3;
@@ -118,7 +125,7 @@
             this.groupBox1.Controls.Add(this.New);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(600, 228);
+            this.groupBox1.Size = new System.Drawing.Size(673, 228);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Included Directories and File Patterns";
@@ -126,7 +133,7 @@
             // CloseForm
             // 
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(521, 255);
+            this.CloseForm.Location = new System.Drawing.Point(593, 255);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 5;
@@ -166,7 +173,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.CloseForm;
-            this.ClientSize = new System.Drawing.Size(624, 292);
+            this.ClientSize = new System.Drawing.Size(697, 292);
             this.Controls.Add(this.BackupDestination);
             this.Controls.Add(this.Discover);
             this.Controls.Add(this.CloseForm);
@@ -195,5 +202,6 @@
         private System.Windows.Forms.Button Discover;
         private System.Windows.Forms.ColumnHeader lastBackupDate;
         private System.Windows.Forms.Button BackupDestination;
+        private System.Windows.Forms.ColumnHeader modifiedOnly;
     }
 }

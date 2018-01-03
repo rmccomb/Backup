@@ -37,12 +37,14 @@
             this.Commit = new System.Windows.Forms.Button();
             this.Cancel = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
+            this.IsModifiedOnly = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 23);
+            this.label1.Location = new System.Drawing.Point(18, 23);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(52, 13);
             this.label1.TabIndex = 0;
@@ -50,15 +52,15 @@
             // 
             // Directory
             // 
-            this.Directory.Location = new System.Drawing.Point(85, 20);
+            this.Directory.Location = new System.Drawing.Point(120, 20);
             this.Directory.Name = "Directory";
-            this.Directory.Size = new System.Drawing.Size(517, 20);
+            this.Directory.Size = new System.Drawing.Size(482, 20);
             this.Directory.TabIndex = 1;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(15, 52);
+            this.label2.Location = new System.Drawing.Point(18, 52);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(44, 13);
             this.label2.TabIndex = 2;
@@ -66,7 +68,7 @@
             // 
             // Pattern
             // 
-            this.Pattern.Location = new System.Drawing.Point(85, 49);
+            this.Pattern.Location = new System.Drawing.Point(120, 49);
             this.Pattern.Name = "Pattern";
             this.Pattern.Size = new System.Drawing.Size(104, 20);
             this.Pattern.TabIndex = 3;
@@ -74,7 +76,8 @@
             // 
             // Browse
             // 
-            this.Browse.Location = new System.Drawing.Point(85, 87);
+            this.Browse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.Browse.Location = new System.Drawing.Point(120, 110);
             this.Browse.Name = "Browse";
             this.Browse.Size = new System.Drawing.Size(125, 23);
             this.Browse.TabIndex = 4;
@@ -84,7 +87,8 @@
             // 
             // Commit
             // 
-            this.Commit.Location = new System.Drawing.Point(446, 87);
+            this.Commit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.Commit.Location = new System.Drawing.Point(443, 110);
             this.Commit.Name = "Commit";
             this.Commit.Size = new System.Drawing.Size(75, 23);
             this.Commit.TabIndex = 5;
@@ -94,7 +98,8 @@
             // 
             // Cancel
             // 
-            this.Cancel.Location = new System.Drawing.Point(527, 87);
+            this.Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.Cancel.Location = new System.Drawing.Point(524, 110);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 6;
@@ -102,11 +107,31 @@
             this.Cancel.UseVisualStyleBackColor = true;
             this.Cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
+            // IsModifiedOnly
+            // 
+            this.IsModifiedOnly.AutoSize = true;
+            this.IsModifiedOnly.Location = new System.Drawing.Point(126, 82);
+            this.IsModifiedOnly.Name = "IsModifiedOnly";
+            this.IsModifiedOnly.Size = new System.Drawing.Size(15, 14);
+            this.IsModifiedOnly.TabIndex = 7;
+            this.IsModifiedOnly.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(18, 83);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(98, 13);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "Modified Files Only:";
+            // 
             // EditSource
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(618, 128);
+            this.ClientSize = new System.Drawing.Size(618, 151);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.IsModifiedOnly);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.Commit);
             this.Controls.Add(this.Browse);
@@ -115,9 +140,11 @@
             this.Controls.Add(this.Directory);
             this.Controls.Add(this.label1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditSource";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "EditSource";
+            this.Text = "Source Directory";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -133,5 +160,7 @@
         private System.Windows.Forms.Button Commit;
         private System.Windows.Forms.Button Cancel;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
+        private System.Windows.Forms.CheckBox IsModifiedOnly;
+        private System.Windows.Forms.Label label3;
     }
 }

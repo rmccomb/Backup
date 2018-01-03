@@ -22,7 +22,7 @@ namespace Backup.Test
             // Dummy sources
             if (sources.Count == 0)
                 sources.Add(
-                    new Source(@"C:\Users\Rob\source\repos\Backup\Backup.Test\test files\", "*.*"));
+                    new Source(@"C:\Users\Rob\source\repos\Backup\Backup.Test\test files\", "Yes", "*.*"));
 
             FileManager.SaveDiscoveredFiles(FileManager.DiscoverFiles(sources));
 
@@ -43,7 +43,7 @@ namespace Backup.Test
         [TestMethod]
         public void ReadWriteSettingsFile()
         {
-            var settings = new DestinationSettings
+            var settings = new Settings
             {
                 FileSystemDirectory = @"C:\Users\Rob\source\repos\Backup\Backup.Test\archive",
                 AWSAccessKeyID = "AKIAIK5CONHAOVWPN27Q",

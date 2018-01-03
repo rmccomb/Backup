@@ -22,6 +22,7 @@ namespace Backup
         {
             this.Directory.Text = item.SubItems[0].Text;
             this.Pattern.Text = item.SubItems[1].Text;
+            this.IsModifiedOnly.Checked = item.SubItems[2].Text == "Yes";
         }
 
         private void Browse_Click(object sender, EventArgs e)
@@ -43,9 +44,9 @@ namespace Backup
             this.Close();
         }
 
-        public (string, string) GetValues()
+        public (string, string, string) GetValues()
         {
-            return (Directory.Text, Pattern.Text);
+            return (Directory.Text, Pattern.Text, IsModifiedOnly.Checked ? "Yes" : "No");
         }
 
     }

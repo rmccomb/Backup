@@ -250,7 +250,7 @@ namespace Backup.Logic
         /// <summary>
         /// Issue a request to get Glacier inventory or process existing request
         /// </summary>
-        public static GlacierResult GetGlacierInventory(bool createNewJob)
+        public static GlacierResult GetGlacierInventory(Settings settings)
         {
             #region pseudocode
             // Is there an inventory file?
@@ -267,16 +267,19 @@ namespace Backup.Logic
             try
             {
                 Topic topic = GetExistingTopic(InventoryTopicFileName);
-                if (topic == null && createNewJob)
+                var updateIsDue = IsInventoryUpdateDue(settings);
+                if (topic == null && updateIsDue)
                 {
                     // Issue new request and serialize topic details to global file
                     topic = SetupTopicAndSubscriptions(InventoryTopicFileName, GetTempDirectory(), null, InventoryFileName);
                     topic.Type = "inventory-retrieval";
                     topic.Description = "This job is to download a vault inventory";
                     InitiateGlacierJob(topic);
+                    settings.InventoryUpdateRequested = DateTime.Now;
+                    SaveSettings(settings);
                     return topic.Status; // only requested - no need to process yet
                 }
-                if (!createNewJob)
+                if (!updateIsDue)
                     return GlacierResult.NoJob;
                 
                 var result = ProcessQueue(topic);
@@ -293,6 +296,12 @@ namespace Backup.Logic
                 BackupError?.Invoke(ex.Message);
                 return GlacierResult.Error;
             }
+        }
+
+        private static bool IsInventoryUpdateDue(Settings settings)
+        {
+            return settings.IsGlacierEnabled 
+                && DateTime.Now - settings.InventoryUpdateRequested > new TimeSpan(24, 0, 0);
         }
 
         /// <summary>
@@ -485,22 +494,39 @@ namespace Backup.Logic
             }
             catch (AmazonServiceException azex)
             {
+                // Handle specific potential errors here
                 Debug.WriteLine("AmazonServiceException " + azex.Message);
 
                 if (azex.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
                     // Invalid credentials
-                    BackupWarning?.Invoke("Invalid AWS credentials were provided while connecting");
+                    BackupError?.Invoke("Invalid AWS credentials were provided while connecting");
+                    return GlacierResult.Incomplete;
+                }
+                if (azex.InnerException != null 
+                    && azex.InnerException is System.Net.WebException
+                    && ((System.Net.WebException)azex.InnerException).Status == System.Net.WebExceptionStatus.NameResolutionFailure)
+                {
+                    // Not connected to internet
+                    BackupError?.Invoke("Network connection failure");
+                    return GlacierResult.Incomplete;
+                }
+                if (azex.InnerException != null
+                    && azex.InnerException is System.Net.WebException)
+                {
+                    // Network errors
+                    BackupError?.Invoke($"A network error occurred ({((System.Net.WebException)azex.InnerException).Status})");
                     return GlacierResult.Incomplete;
                 }
 
+                // TODO Check expiry?
                 // Glacier ref: "A job ID will not expire for at least 24 hours after Amazon Glacier completes the job."
                 DeleteTopic(topic);
-                BackupWarning?.Invoke("A Glacier job has expired, a new job will be issued");
-                // TODO reissue expired job
+                BackupWarning?.Invoke("An AWS Glacier job has expired, a new job will be issued");
+                
+                // Reissue expired job
                 InitiateGlacierJob(topic);
                 return topic.Status;
-                //throw azex;
             }
             catch (Exception ex)
             {

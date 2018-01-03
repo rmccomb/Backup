@@ -33,5 +33,7 @@ namespace Backup.Logic
 
         public string SMSContact { get; set; }
         public bool IsSMSContactEnabled { get; set; }
+
+        public DateTime InventoryUpdateRequested { get; set; }
     }
 }

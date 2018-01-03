@@ -46,16 +46,31 @@ namespace Backup
 
             this.settings = FileManager.GetSettings();
 
+            // File System
             ArchivePath.Text = settings.FileSystemDirectory;
             IsFileSystem.Checked = settings.IsFileSystemEnabled;
+            if (settings.IsFileSystemEnabled)
+                BrowseDirectory.Enabled = true;
+            else
+                BrowseDirectory.Enabled = false;
 
+            // S3 Bucket
             S3BucketName.Text = settings.AWSS3Bucket;
             IsS3Bucket.Checked = settings.IsS3BucketEnabled;
             S3Region.SelectedValue = settings.AWSS3Region == null ? settings.AWSS3Region.SystemName : AWSHelper.GetDefaultRegionSystemName();
+            if (S3BucketName.Text != string.Empty)
+                ListBucketContents.Enabled = true;
+            else
+                ListBucketContents.Enabled = false;
 
+            // Glacier
             GlacierVaultName.Text = settings.AWSGlacierVault;
             IsGlacier.Checked = settings.IsGlacierEnabled;
             GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName : AWSHelper.GetDefaultRegionSystemName();
+            if (GlacierVaultName.Text != string.Empty)
+                ListInventory.Enabled = true;
+            else
+                ListInventory.Enabled = false;
 
             _awsAccessKey = settings.AWSAccessKeyID;
             _awsSecret = settings.AWSSecretAccessKey;
@@ -68,12 +83,12 @@ namespace Backup
             if (this.IsFileSystem.Checked)
             {
                 this.ArchivePath.Enabled = true;
-                this.Browse.Enabled = true;
+                this.BrowseDirectory.Enabled = true;
             }
             else
             {
                 this.ArchivePath.Enabled = false;
-                this.Browse.Enabled = false;
+                this.BrowseDirectory.Enabled = false;
             }
         }
 
@@ -83,6 +98,8 @@ namespace Backup
             {
                 this.S3BucketName.Enabled = true;
                 this.S3Region.Enabled = true;
+                if (this.S3BucketName.Text != string.Empty)
+                    this.ListBucketContents.Enabled = true;
             }
             else
             {
@@ -97,6 +114,8 @@ namespace Backup
             {
                 this.GlacierVaultName.Enabled = true;
                 this.GlacierRegion.Enabled = true;
+                if (this.GlacierVaultName.Text != string.Empty)
+                    this.ListInventory.Enabled = true;
             }
             else
             {
@@ -159,9 +178,9 @@ namespace Backup
         private void ListBucketContents_Click(object sender, EventArgs e)
         {
             this.SaveSettings();
-            var dlg = new FileListForm
+            var dlg = new BucketContentsForm
             {
-                Text = this.settings.AWSS3Bucket
+                Text = "S3 Bucket: " + this.settings.AWSS3Bucket
             };
             dlg.Show();
         }
@@ -171,7 +190,7 @@ namespace Backup
             this.SaveSettings();
             var dlg = new InventoryForm
             {
-                Text = this.settings.AWSGlacierVault
+                Text = "Vault: " + this.settings.AWSGlacierVault
             };
             dlg.ShowDialog();
         }
@@ -185,6 +204,22 @@ namespace Backup
                 this._awsAccessKey = dlg.AccessKey;
                 this._awsSecret = dlg.Secret;
             }
+        }
+
+        private void S3BucketName_TextChanged(object sender, EventArgs e)
+        {
+            if (this.S3BucketName.Text != string.Empty)
+                this.ListBucketContents.Enabled = true;
+            else
+                this.ListBucketContents.Enabled = false;
+        }
+
+        private void GlacierVaultName_TextChanged(object sender, EventArgs e)
+        {
+            if (this.GlacierVaultName.Text != string.Empty)
+                this.ListInventory.Enabled = true;
+            else
+                this.ListInventory.Enabled = false;
         }
     }
 }

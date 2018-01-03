@@ -43,7 +43,7 @@ namespace Backup
                 FileManager.InvokeBackup();
 
             // Update Glacier Inventory 
-            Debug.WriteLine(FileManager.GetGlacierInventory(settings.IsGlacierEnabled));
+            Debug.WriteLine(FileManager.GetGlacierInventory(settings));
             if (settings.IsGlacierEnabled)
             {
                 try

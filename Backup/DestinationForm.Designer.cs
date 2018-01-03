@@ -33,7 +33,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.Browse = new System.Windows.Forms.Button();
+            this.BrowseDirectory = new System.Windows.Forms.Button();
             this.ArchivePath = new System.Windows.Forms.TextBox();
             this.IsFileSystem = new System.Windows.Forms.CheckBox();
             this.S3BucketName = new System.Windows.Forms.TextBox();
@@ -68,7 +68,7 @@
             // 
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.label3);
-            this.groupBox2.Controls.Add(this.Browse);
+            this.groupBox2.Controls.Add(this.BrowseDirectory);
             this.groupBox2.Controls.Add(this.ArchivePath);
             this.groupBox2.Controls.Add(this.IsFileSystem);
             this.groupBox2.Location = new System.Drawing.Point(12, 12);
@@ -96,16 +96,16 @@
             this.label3.TabIndex = 10;
             this.label3.Text = "Folder:";
             // 
-            // Browse
+            // BrowseDirectory
             // 
-            this.Browse.Enabled = false;
-            this.Browse.Location = new System.Drawing.Point(430, 17);
-            this.Browse.Name = "Browse";
-            this.Browse.Size = new System.Drawing.Size(123, 23);
-            this.Browse.TabIndex = 9;
-            this.Browse.Text = "Browse Directory...";
-            this.Browse.UseVisualStyleBackColor = true;
-            this.Browse.Click += new System.EventHandler(this.Browse_Click);
+            this.BrowseDirectory.Enabled = false;
+            this.BrowseDirectory.Location = new System.Drawing.Point(430, 17);
+            this.BrowseDirectory.Name = "BrowseDirectory";
+            this.BrowseDirectory.Size = new System.Drawing.Size(123, 23);
+            this.BrowseDirectory.TabIndex = 9;
+            this.BrowseDirectory.Text = "Select Directory...";
+            this.BrowseDirectory.UseVisualStyleBackColor = true;
+            this.BrowseDirectory.Click += new System.EventHandler(this.Browse_Click);
             // 
             // ArchivePath
             // 
@@ -132,6 +132,7 @@
             this.S3BucketName.Name = "S3BucketName";
             this.S3BucketName.Size = new System.Drawing.Size(323, 20);
             this.S3BucketName.TabIndex = 10;
+            this.S3BucketName.TextChanged += new System.EventHandler(this.S3BucketName_TextChanged);
             // 
             // IsS3Bucket
             // 
@@ -145,7 +146,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(407, 291);
+            this.CloseForm.Location = new System.Drawing.Point(402, 292);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -156,7 +157,7 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(493, 291);
+            this.Cancel.Location = new System.Drawing.Point(488, 292);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 11;
@@ -216,6 +217,7 @@
             // 
             // ListBucketContents
             // 
+            this.ListBucketContents.Enabled = false;
             this.ListBucketContents.Location = new System.Drawing.Point(429, 17);
             this.ListBucketContents.Name = "ListBucketContents";
             this.ListBucketContents.Size = new System.Drawing.Size(124, 23);
@@ -260,6 +262,7 @@
             // 
             // ListInventory
             // 
+            this.ListInventory.Enabled = false;
             this.ListInventory.Location = new System.Drawing.Point(429, 15);
             this.ListInventory.Name = "ListInventory";
             this.ListInventory.Size = new System.Drawing.Size(123, 23);
@@ -315,6 +318,7 @@
             this.GlacierVaultName.Name = "GlacierVaultName";
             this.GlacierVaultName.Size = new System.Drawing.Size(323, 20);
             this.GlacierVaultName.TabIndex = 1;
+            this.GlacierVaultName.TextChanged += new System.EventHandler(this.GlacierVaultName_TextChanged);
             // 
             // label6
             // 
@@ -371,7 +375,7 @@
 
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.TextBox S3BucketName;
-        private System.Windows.Forms.Button Browse;
+        private System.Windows.Forms.Button BrowseDirectory;
         private System.Windows.Forms.TextBox ArchivePath;
         private System.Windows.Forms.CheckBox IsS3Bucket;
         private System.Windows.Forms.CheckBox IsFileSystem;

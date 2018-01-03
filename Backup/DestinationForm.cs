@@ -1,15 +1,14 @@
-﻿using Backup.Logic;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System;
 using System.Windows.Forms;
+using Backup.Logic;
 
 namespace Backup
 {
     public partial class DestinationForm : Form
     {
         private Settings settings;
-        private string _awsSecretKey;
+        private string _awsAccessKey;
+        private string _awsSecret;
 
         public DestinationForm()
         {
@@ -58,10 +57,8 @@ namespace Backup
             IsGlacier.Checked = settings.IsGlacierEnabled;
             GlacierRegion.SelectedValue = settings.AWSGlacierRegion == null ?settings.AWSGlacierRegion.SystemName : AWSHelper.GetDefaultRegionSystemName();
 
-            AWSAccessKey.Text = settings.AWSAccessKeyID;
-            _awsSecretKey = settings.AWSSecretAccessKey;
-            SMSContact.Text = settings.SMSContact;
-            IsSMSContact.Checked = settings.IsSMSContactEnabled;
+            _awsAccessKey = settings.AWSAccessKeyID;
+            _awsSecret = settings.AWSSecretAccessKey;
 
             CreateOnStart.Checked = settings.CreateBackupOnStart;
         }
@@ -86,19 +83,11 @@ namespace Backup
             {
                 this.S3BucketName.Enabled = true;
                 this.S3Region.Enabled = true;
-                this.AWSAccessKey.Enabled = true;
-                this.AddAWSSecret.Enabled = true;
             }
             else
             {
                 this.S3BucketName.Enabled = false;
                 this.S3Region.Enabled = false;
-            }
-
-            if (!this.IsS3Bucket.Checked && !this.IsGlacier.Checked)
-            {
-                this.AWSAccessKey.Enabled = false;
-                this.AddAWSSecret.Enabled = false;
             }
         }
 
@@ -108,37 +97,19 @@ namespace Backup
             {
                 this.GlacierVaultName.Enabled = true;
                 this.GlacierRegion.Enabled = true;
-                this.AWSAccessKey.Enabled = true;
-                this.AddAWSSecret.Enabled = true;
             }
             else
             {
                 this.GlacierVaultName.Enabled = false;
                 this.GlacierRegion.Enabled = false;
             }
-            
-            if(!this.IsGlacier.Checked && !this.IsS3Bucket.Checked)
-            {
-                this.AWSAccessKey.Enabled = false;
-                this.AddAWSSecret.Enabled = false;
-            }
-        }
-
-        private void AddSecret_Click(object sender, EventArgs e)
-        {
-            var dlg = new EditSecret();
-            var result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                this._awsSecretKey = dlg.Secret;
-            }
         }
 
         private bool HasChanges()
         {
             if (settings.FileSystemDirectory != this.ArchivePath.Text ||
-                settings.AWSAccessKeyID != this.AWSAccessKey.Text ||
-                settings.AWSSecretAccessKey != this._awsSecretKey ||
+                settings.AWSAccessKeyID != this._awsAccessKey ||
+                settings.AWSSecretAccessKey != this._awsSecret ||
                 settings.AWSS3Bucket != this.S3BucketName.Text ||
                 settings.IsFileSystemEnabled != this.IsFileSystem.Checked ||
                 settings.IsS3BucketEnabled != this.IsS3Bucket.Checked ||
@@ -146,9 +117,7 @@ namespace Backup
                 settings.IsGlacierEnabled != this.IsGlacier.Checked ||
                 settings.AWSGlacierVault != this.GlacierVaultName.Text ||
                 settings.AWSS3Region != (AWSRegionEndPoint)this.S3Region.SelectedItem ||
-                settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem ||
-                settings.SMSContact != this.SMSContact.Text ||
-                settings.IsSMSContactEnabled != this.IsSMSContact.Checked)
+                settings.AWSGlacierRegion != (AWSRegionEndPoint)this.GlacierRegion.SelectedItem)
                 return true;
             else
                 return false;
@@ -173,8 +142,8 @@ namespace Backup
             {
                 FileSystemDirectory = this.ArchivePath.Text,
                 IsFileSystemEnabled = this.IsFileSystem.Checked,
-                AWSAccessKeyID = this.AWSAccessKey.Text,
-                AWSSecretAccessKey = this._awsSecretKey,
+                AWSAccessKeyID = this._awsAccessKey,
+                AWSSecretAccessKey = this._awsSecret,
                 AWSS3Bucket = this.S3BucketName.Text,
                 IsS3BucketEnabled = this.IsS3Bucket.Checked,
                 AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem,
@@ -182,8 +151,6 @@ namespace Backup
                 IsGlacierEnabled = this.IsGlacier.Checked,
                 AWSGlacierVault = this.GlacierVaultName.Text,
                 AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem,
-                SMSContact = this.SMSContact.Text,
-                IsSMSContactEnabled = this.IsSMSContact.Checked
             };
             FileManager.SaveSettings(this.settings);
             PopulateControls();
@@ -207,6 +174,17 @@ namespace Backup
                 Text = this.settings.AWSGlacierVault
             };
             dlg.ShowDialog();
+        }
+
+        private void AWSCredentials_Click(object sender, EventArgs e)
+        {
+            var dlg = new AWSCredentials(this._awsAccessKey);
+            var result = dlg.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                this._awsAccessKey = dlg.AccessKey;
+                this._awsSecret = dlg.Secret;
+            }
         }
     }
 }

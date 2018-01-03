@@ -5,9 +5,8 @@ namespace Backup.Logic
     [Serializable]
     public enum GlacierResult
     {
-        Unknown,
-        DownloadRequested,
-        InventoryRequested,
+        NoJob,
+        JobRequested,
         Ready,
         Error,
         Completed,

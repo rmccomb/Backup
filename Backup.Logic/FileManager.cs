@@ -214,8 +214,6 @@ namespace Backup.Logic
         {
             try
             {
-                //Task t;
-                //await t.ConfigureAwait(false);
                 var settings = GetSettings();
                 var downloadInfo = new DownloadObjectInfo { DownloadDirectory = downloadDir, ObjectKey = objectKey };
                 AmazonS3Client client = new AmazonS3Client(
@@ -244,6 +242,59 @@ namespace Backup.Logic
             DownloadSuccess?.Invoke($"Backup downloaded {info.ObjectKey} to {Path.Combine(info.DownloadDirectory, checkedFilePath)}");
         }
 
+        public static string GetArchiveTopicFileName(string archiveId)
+        {
+            return ArchiveTopicFileName.Replace("#", archiveId.Substring(archiveId.Length-15, 15).ToString());
+        }
+
+        /// <summary>
+        /// Issue a request to get Glacier inventory or process existing request
+        /// </summary>
+        public static GlacierResult GetGlacierInventory(bool createNewJob)
+        {
+            #region pseudocode
+            // Is there an inventory file?
+            // Yes: return Inventory and issue new request
+            // Not found:
+            //   Is an inventory request issued?
+            //      Yes: get request details
+            //      No: Issue request and save SNS topic, Job ID, Queue URL
+            // Poll topic for response
+            // Poll Message received?
+            //    Yes: serialize inventory to file and return
+            //    No: return details of inventory request (in progress)
+            #endregion
+            try
+            {
+                Topic topic = GetExistingTopic(InventoryTopicFileName);
+                if (topic == null && createNewJob)
+                {
+                    // Issue new request and serialize topic details to global file
+                    topic = SetupTopicAndSubscriptions(InventoryTopicFileName, GetTempDirectory(), null, InventoryFileName);
+                    topic.Type = "inventory-retrieval";
+                    topic.Description = "This job is to download a vault inventory";
+                    InitiateGlacierJob(topic);
+                    return topic.Status; // only requested - no need to process yet
+                }
+                if (!createNewJob)
+                    return GlacierResult.NoJob;
+                
+                var result = ProcessQueue(topic);
+                Debug.WriteLine("ProcessQueue result: " + result);
+                if (result == GlacierResult.Completed)
+                {
+                    DownloadSuccess?.Invoke("Glacier Inventory was updated");
+                }
+
+                return topic.Status;
+            }
+            catch (Exception ex)
+            {
+                BackupError?.Invoke(ex.Message);
+                return GlacierResult.Error;
+            }
+        }
+
         /// <summary>
         /// Get a Glacier archive
         /// </summary>
@@ -266,61 +317,14 @@ namespace Backup.Logic
                 {
                     // Issue new request and serialize topic details to file
                     topic = SetupTopicAndSubscriptions(topicFileName, downloadDirectory, archiveId, filename);
-
-                    InitiateArchiveRetrieval(topic);
+                    topic.Type = "archive-retrieval";
+                    topic.Description = "This job is to download a vault archive";
+                    topic.ArchiveId = archiveId;
+                    InitiateGlacierJob(topic);
                 }
                 //ProcessQueue(topic);
                 //if (topic.Status == GlacierResult.Completed)
                 //    DownloadSuccess?.Invoke($"Backup downloaded {topic.OutputPath}");
-
-                return topic.Status;
-            }
-            catch (Exception ex)
-            {
-                BackupError?.Invoke(ex.Message);
-                return GlacierResult.Error;
-            }
-        }
-
-        public static string GetArchiveTopicFileName(string archiveId)
-        {
-            return ArchiveTopicFileName.Replace("#", archiveId.Substring(archiveId.Length-15, 15).ToString());
-        }
-
-        /// <summary>
-        /// Issue a request to get Glacier inventory or process existing request
-        /// </summary>
-        public static GlacierResult GetGlacierInventory()
-        {
-            #region pseudocode
-            // Is there an inventory file?
-            // Yes: return Inventory and issue new request
-            // Not found:
-            //   Is an inventory request issued?
-            //      Yes: get request details
-            //      No: Issue request and save SNS topic, Job ID, Queue URL
-            // Poll topic for response
-            // Poll Message received?
-            //    Yes: serialize inventory to file and return
-            //    No: return details of inventory request (in progress)
-            #endregion
-            try
-            {
-                Topic topic = GetExistingTopic(InventoryTopicFileName);
-                if (topic == null)
-                {
-                    // Issue new request and serialize topic details to global file
-                    topic = SetupTopicAndSubscriptions(InventoryTopicFileName, GetTempDirectory(), null, InventoryFileName); 
-                    InitiateInventoryRetrieval(topic);
-                    return topic.Status; // only requested - no need to process yet
-                }
-                
-                var result = ProcessQueue(topic);
-                Debug.WriteLine("ProcessQueue result: " + result);
-                if (result == GlacierResult.Completed)
-                {
-                    DownloadSuccess?.Invoke("Glacier Inventory was updated");
-                }
 
                 return topic.Status;
             }
@@ -352,7 +356,7 @@ namespace Backup.Logic
                     foreach (var archive in inventory.ArchiveList)
                     {
                         var topicFile = GetArchiveTopicFileName(archive.ArchiveId);
-                        var status = GetExistingTopic(topicFile)?.Status ?? GlacierResult.Unknown;
+                        var status = GetExistingTopic(topicFile)?.Status ?? GlacierResult.NoJob;
                         model.Add(new ArchiveModel
                         {
                             ArchiveId = archive.ArchiveId,
@@ -442,12 +446,11 @@ namespace Backup.Logic
                     var receiveMessageRequest = new ReceiveMessageRequest { QueueUrl = topic.QueueUrl, MaxNumberOfMessages = 1 };
                     var sqsClient = new AmazonSQSClient(settings.AWSAccessKeyID, settings.AWSSecretAccessKey, RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
                     var receiveMessageResponse = sqsClient.ReceiveMessage(receiveMessageRequest);
-                    //GlacierResult result = GlacierResult.Unknown;
                     if (receiveMessageResponse.Messages.Count == 0)
                     {
                         topic.Status = GlacierResult.Incomplete;
                         SaveTopicFile(topic);
-                        return GlacierResult.Incomplete;
+                        return topic.Status;
                     }
 
                     // Process message
@@ -483,8 +486,21 @@ namespace Backup.Logic
             catch (AmazonServiceException azex)
             {
                 Debug.WriteLine("AmazonServiceException " + azex.Message);
+
+                if (azex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    // Invalid credentials
+                    BackupWarning?.Invoke("Invalid AWS credentials were provided while connecting");
+                    return GlacierResult.Incomplete;
+                }
+
+                // Glacier ref: "A job ID will not expire for at least 24 hours after Amazon Glacier completes the job."
                 DeleteTopic(topic);
-                throw azex;
+                BackupWarning?.Invoke("A Glacier job has expired, a new job will be issued");
+                // TODO reissue expired job
+                InitiateGlacierJob(topic);
+                return topic.Status;
+                //throw azex;
             }
             catch (Exception ex)
             {
@@ -514,7 +530,6 @@ namespace Backup.Logic
             File.Delete(Path.Combine(GetTempDirectory(), topic.TopicFileName));
             Debug.WriteLine($"Deleted topic {topic.TopicARN}");
             Debug.WriteLine($"Deleted topic file {topic.TopicFileName}");
-            topic = null;
         }
 
         private static string GetResponseStatus(ReceiveMessageResponse receiveMessageResponse)
@@ -568,7 +583,7 @@ namespace Backup.Logic
             }
         }
 
-        private static void InitiateInventoryRetrieval(Topic topic)
+        private static void InitiateGlacierJob(Topic topic)
         {
             // Make the call to AWS Glacier to get inventory
             var settings = GetSettings();
@@ -582,47 +597,47 @@ namespace Backup.Logic
                     VaultName = settings.AWSGlacierVault,
                     JobParameters = new JobParameters
                     {
-                        Type = "inventory-retrieval",
-                        Description = "This job is to download a vault inventory.",
-                        SNSTopic = topic.TopicARN,
-                    }
-                };
-
-                //Debug.WriteLine("Job: " + initJobRequest.JobParameters.Type);
-                var initJobResponse = client.InitiateJob(initJobRequest);
-                topic.JobId = initJobResponse.JobId;
-                topic.Status = GlacierResult.InventoryRequested;
-                SaveTopicFile(topic);
-            }
-        }
-
-        private static void InitiateArchiveRetrieval(Topic topic)
-        {
-            // Make the call to AWS Glacier to get archive
-            var settings = GetSettings();
-            using (var client = new AmazonGlacierClient(
-                        settings.AWSAccessKeyID,
-                        settings.AWSSecretAccessKey,
-                        RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
-            {
-                InitiateJobRequest initJobRequest = new InitiateJobRequest
-                {
-                    VaultName = settings.AWSGlacierVault,
-                    JobParameters = new JobParameters
-                    {
-                        Type = "archive-retrieval",
+                        Type = topic.Type,
+                        Description = topic.Description,
                         ArchiveId = topic.ArchiveId,
                         SNSTopic = topic.TopicARN,
                     }
                 };
 
-                //Debug.WriteLine("Job requested: " + initJobRequest.JobParameters.Type);
-                InitiateJobResponse initJobResponse = client.InitiateJob(initJobRequest);
+                var initJobResponse = client.InitiateJob(initJobRequest);
                 topic.JobId = initJobResponse.JobId;
-                topic.Status = GlacierResult.DownloadRequested;
+                topic.Status = GlacierResult.JobRequested;
                 SaveTopicFile(topic);
             }
         }
+
+        //private static void InitiateArchiveRetrievalOLD(Topic topic)
+        //{
+        //    // Make the call to AWS Glacier to get archive
+        //    var settings = GetSettings();
+        //    using (var client = new AmazonGlacierClient(
+        //                settings.AWSAccessKeyID,
+        //                settings.AWSSecretAccessKey,
+        //                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+        //    {
+        //        InitiateJobRequest initJobRequest = new InitiateJobRequest
+        //        {
+        //            VaultName = settings.AWSGlacierVault,
+        //            JobParameters = new JobParameters
+        //            {
+        //                Type = "archive-retrieval",
+        //                ArchiveId = topic.ArchiveId,
+        //                SNSTopic = topic.TopicARN,
+        //            }
+        //        };
+
+        //        //Debug.WriteLine("Job requested: " + initJobRequest.JobParameters.Type);
+        //        InitiateJobResponse initJobResponse = client.InitiateJob(initJobRequest);
+        //        topic.JobId = initJobResponse.JobId;
+        //        topic.Status = GlacierResult.DownloadRequested;
+        //        SaveTopicFile(topic);
+        //    }
+        //}
 
         private static Topic SetupTopicAndSubscriptions(string topicFileName, string outputDirectory, string archiveId = null, string filename = null)
         {
@@ -841,6 +856,24 @@ namespace Backup.Logic
         }
 
         /// <summary>
+        /// Invoke backup of the current files list, possibly modified by user
+        /// </summary>
+        static public void InvokeBackupFromUser()
+        {
+            try
+            {
+                var sources = GetSources();
+                CopyFiles();
+                UpdateTimestamp(sources);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                BackupError?.Invoke(ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Do the backing up of the discovered files
         /// </summary>
         /// <param name="archiveDir">A directory to backup to</param>
@@ -1008,7 +1041,7 @@ namespace Backup.Logic
 
                     ZipFile.CreateFromDirectory(uniqueArchiveDir, zipFileArchive, CompressionLevel.Optimal, false);
 
-                    // Clean up folders used to make the archive
+                    // Clean up folders used to make the zip archive
                     DeleteZipSource(uniqueArchiveDir);
 
                     BackupSuccess?.Invoke($"{fileCount} file {(fileCount == 1 ? String.Empty : "s")} copied to {zipFileArchive}");
@@ -1026,6 +1059,7 @@ namespace Backup.Logic
 
         private static void DeleteZipSource(string zipSource)
         {
+            Thread.Sleep(1000);
             DeleteFolderContents(zipSource);
         }
 

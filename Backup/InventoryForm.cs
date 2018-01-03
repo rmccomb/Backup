@@ -38,14 +38,12 @@ namespace Backup
                 var result = await Task.Run(() 
                     => FileManager.RequestGlacierArchive(archiveId, this.downloadDirectory, description));
                 
-                //CreateMessage(result);
                 PopulateControls();
             }
         }
 
         private async void PopulateControls()
         {
-            //var result = await Task.Run(() => FileManager.GetGlacierInventory());
             this.FilesList.Items.Clear();
             var inventory = await Task.Run(() => FileManager.GetArchiveModel());
             if (inventory == null)
@@ -79,12 +77,11 @@ namespace Backup
                 case GlacierResult.Error:
                 case GlacierResult.JobFailed:
                     return "Failed";
-                case GlacierResult.DownloadRequested:
-                case GlacierResult.InventoryRequested:
+                case GlacierResult.JobRequested:
                 case GlacierResult.Incomplete:
                     return "Requested";
                 default:
-                    return "";
+                    return "Archived";
             }
         }
 
@@ -95,14 +92,9 @@ namespace Backup
 
         private void FilesList_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            // TODO check status of any existing job
-            // 
             if (this.FilesList.SelectedItems.Count > 0)
-            {
-                //Debug.WriteLine(this.FilesList.SelectedItems[0].SubItems);
-                if (this.FilesList.SelectedItems[0].SubItems[3].Text == "")
+                if (this.FilesList.SelectedItems[0].SubItems[3].Text == "Archived")
                     this.Download.Enabled = true;
-            }
             else
                 this.Download.Enabled = false;
         }

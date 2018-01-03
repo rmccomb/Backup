@@ -7,6 +7,8 @@ namespace Backup.Logic
     public class Topic
     {
         public string TopicFileName { get; set; }
+        public string Type { get; set; }
+        public string Description { get; set; }
         public string TopicARN { get; set; }
 
         public string JobId { get; set; }

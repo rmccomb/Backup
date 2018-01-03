@@ -61,7 +61,6 @@
             // 
             // AWSAccessKey
             // 
-            this.AWSAccessKey.Enabled = false;
             this.AWSAccessKey.Location = new System.Drawing.Point(100, 19);
             this.AWSAccessKey.Name = "AWSAccessKey";
             this.AWSAccessKey.Size = new System.Drawing.Size(246, 20);
@@ -69,7 +68,6 @@
             // 
             // AddAWSSecret
             // 
-            this.AddAWSSecret.Enabled = false;
             this.AddAWSSecret.Location = new System.Drawing.Point(352, 17);
             this.AddAWSSecret.Name = "AddAWSSecret";
             this.AddAWSSecret.Size = new System.Drawing.Size(125, 23);

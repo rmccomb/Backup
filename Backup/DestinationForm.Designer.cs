@@ -36,9 +36,6 @@
             this.Browse = new System.Windows.Forms.Button();
             this.ArchivePath = new System.Windows.Forms.TextBox();
             this.IsFileSystem = new System.Windows.Forms.CheckBox();
-            this.AddAWSSecret = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.AWSAccessKey = new System.Windows.Forms.TextBox();
             this.S3BucketName = new System.Windows.Forms.TextBox();
             this.IsS3Bucket = new System.Windows.Forms.CheckBox();
             this.CloseForm = new System.Windows.Forms.Button();
@@ -60,15 +57,11 @@
             this.IsGlacier = new System.Windows.Forms.CheckBox();
             this.GlacierVaultName = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.SMSContact = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.IsSMSContact = new System.Windows.Forms.CheckBox();
+            this.AWSCredentials = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).BeginInit();
             this.groupBox3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox2
@@ -106,9 +99,9 @@
             // Browse
             // 
             this.Browse.Enabled = false;
-            this.Browse.Location = new System.Drawing.Point(428, 17);
+            this.Browse.Location = new System.Drawing.Point(430, 17);
             this.Browse.Name = "Browse";
-            this.Browse.Size = new System.Drawing.Size(125, 23);
+            this.Browse.Size = new System.Drawing.Size(123, 23);
             this.Browse.TabIndex = 9;
             this.Browse.Text = "Browse Directory...";
             this.Browse.UseVisualStyleBackColor = true;
@@ -132,34 +125,6 @@
             this.IsFileSystem.UseVisualStyleBackColor = true;
             this.IsFileSystem.CheckedChanged += new System.EventHandler(this.IsFileSystem_CheckedChanged);
             // 
-            // AddAWSSecret
-            // 
-            this.AddAWSSecret.Enabled = false;
-            this.AddAWSSecret.Location = new System.Drawing.Point(429, 17);
-            this.AddAWSSecret.Name = "AddAWSSecret";
-            this.AddAWSSecret.Size = new System.Drawing.Size(125, 23);
-            this.AddAWSSecret.TabIndex = 15;
-            this.AddAWSSecret.Text = "Add Secret...";
-            this.AddAWSSecret.UseVisualStyleBackColor = true;
-            this.AddAWSSecret.Click += new System.EventHandler(this.AddSecret_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(14, 22);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(80, 13);
-            this.label2.TabIndex = 14;
-            this.label2.Text = "Access Key ID:";
-            // 
-            // AWSAccessKey
-            // 
-            this.AWSAccessKey.Enabled = false;
-            this.AWSAccessKey.Location = new System.Drawing.Point(100, 19);
-            this.AWSAccessKey.Name = "AWSAccessKey";
-            this.AWSAccessKey.Size = new System.Drawing.Size(323, 20);
-            this.AWSAccessKey.TabIndex = 12;
-            // 
             // S3BucketName
             // 
             this.S3BucketName.Enabled = false;
@@ -180,7 +145,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(405, 331);
+            this.CloseForm.Location = new System.Drawing.Point(407, 291);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -191,7 +156,7 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(491, 331);
+            this.Cancel.Location = new System.Drawing.Point(493, 291);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 11;
@@ -201,7 +166,7 @@
             // CreateOnStart
             // 
             this.CreateOnStart.AutoSize = true;
-            this.CreateOnStart.Location = new System.Drawing.Point(13, 334);
+            this.CreateOnStart.Location = new System.Drawing.Point(28, 252);
             this.CreateOnStart.Name = "CreateOnStart";
             this.CreateOnStart.Size = new System.Drawing.Size(221, 17);
             this.CreateOnStart.TabIndex = 11;
@@ -360,47 +325,15 @@
             this.label6.TabIndex = 0;
             this.label6.Text = "Vault Name:";
             // 
-            // groupBox4
+            // AWSCredentials
             // 
-            this.groupBox4.Controls.Add(this.IsSMSContact);
-            this.groupBox4.Controls.Add(this.SMSContact);
-            this.groupBox4.Controls.Add(this.label9);
-            this.groupBox4.Controls.Add(this.label2);
-            this.groupBox4.Controls.Add(this.AWSAccessKey);
-            this.groupBox4.Controls.Add(this.AddAWSSecret);
-            this.groupBox4.Location = new System.Drawing.Point(12, 243);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(566, 72);
-            this.groupBox4.TabIndex = 18;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "AWS Credentials";
-            // 
-            // SMSContact
-            // 
-            this.SMSContact.Location = new System.Drawing.Point(100, 45);
-            this.SMSContact.Name = "SMSContact";
-            this.SMSContact.Size = new System.Drawing.Size(122, 20);
-            this.SMSContact.TabIndex = 17;
-            this.SMSContact.Text = "\r\n";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(14, 48);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(73, 13);
-            this.label9.TabIndex = 16;
-            this.label9.Text = "SMS Contact:";
-            // 
-            // IsSMSContact
-            // 
-            this.IsSMSContact.AutoSize = true;
-            this.IsSMSContact.Location = new System.Drawing.Point(228, 48);
-            this.IsSMSContact.Name = "IsSMSContact";
-            this.IsSMSContact.Size = new System.Drawing.Size(59, 17);
-            this.IsSMSContact.TabIndex = 18;
-            this.IsSMSContact.Text = "Enable";
-            this.IsSMSContact.UseVisualStyleBackColor = true;
+            this.AWSCredentials.Location = new System.Drawing.Point(442, 248);
+            this.AWSCredentials.Name = "AWSCredentials";
+            this.AWSCredentials.Size = new System.Drawing.Size(121, 23);
+            this.AWSCredentials.TabIndex = 16;
+            this.AWSCredentials.Text = "AWS Credentials...";
+            this.AWSCredentials.UseVisualStyleBackColor = true;
+            this.AWSCredentials.Click += new System.EventHandler(this.AWSCredentials_Click);
             // 
             // DestinationForm
             // 
@@ -408,8 +341,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(587, 369);
-            this.Controls.Add(this.groupBox4);
+            this.ClientSize = new System.Drawing.Size(587, 331);
+            this.Controls.Add(this.AWSCredentials);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.CreateOnStart);
@@ -429,8 +362,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -439,9 +370,6 @@
         #endregion
 
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Button AddAWSSecret;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox AWSAccessKey;
         private System.Windows.Forms.TextBox S3BucketName;
         private System.Windows.Forms.Button Browse;
         private System.Windows.Forms.TextBox ArchivePath;
@@ -460,7 +388,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label IsGlacierLabel;
         private System.Windows.Forms.CheckBox IsGlacier;
-        private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button ListBucketContents;
         private System.Windows.Forms.ComboBox S3Region;
@@ -469,8 +396,6 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.BindingSource aWSRegionEndPointBindingSource;
         private System.Windows.Forms.Button ListInventory;
-        private System.Windows.Forms.TextBox SMSContact;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.CheckBox IsSMSContact;
+        private System.Windows.Forms.Button AWSCredentials;
     }
 }

@@ -27,7 +27,7 @@ namespace Backup.Test
             var andrew = "";
             var secret = "";
 
-            var manager = new ArchiveTransferManager(andrew, secret, Amazon.RegionEndpoint.USEast1);
+            var manager = new ArchiveTransferManager(andrew, secret, RegionEndpoint.USEast1);
 
             // Upload an archive.
             string archiveId = manager.Upload(vaultName, "getting started archive test", archive).ArchiveId;

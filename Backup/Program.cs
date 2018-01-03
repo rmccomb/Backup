@@ -43,10 +43,9 @@ namespace Backup
                 FileManager.InvokeBackup();
 
             // Update Glacier Inventory 
+            Debug.WriteLine(FileManager.GetGlacierInventory(settings.IsGlacierEnabled));
             if (settings.IsGlacierEnabled)
             {
-                Debug.WriteLine(FileManager.GetGlacierInventory());
-
                 try
                 {
                     ProcessArchiveModelAsync();

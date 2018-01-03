@@ -9,10 +9,10 @@ namespace Backup
         public string AccessKey { get; set; }
         public string Secret { get; set; }
 
-        public AWSCredentials()
+        public AWSCredentials(string awsAccessKey)
         {
             InitializeComponent();
-            this.AWSAccessKey.Text = this.AccessKey;
+            this.AWSAccessKey.Text = awsAccessKey;
         }
 
         private void AddAWSSecret_Click(object sender, EventArgs e)

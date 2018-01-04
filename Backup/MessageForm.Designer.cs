@@ -46,7 +46,7 @@
             // Yes
             // 
             this.Yes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Yes.Location = new System.Drawing.Point(190, 66);
+            this.Yes.Location = new System.Drawing.Point(188, 66);
             this.Yes.Name = "Yes";
             this.Yes.Size = new System.Drawing.Size(75, 23);
             this.Yes.TabIndex = 1;

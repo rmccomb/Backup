@@ -37,7 +37,7 @@ namespace Backup
             }
 
             this.FilesList.EndUpdate();
-            this.Message.Text = $"{files.Count()} files have been created or changed";
+            this.Message.Text = $"{files.Count()} files have been created or changed since the last backup";
         }
 
         private void Backup_Click(object sender, EventArgs e)
@@ -61,6 +61,11 @@ namespace Backup
 
         private void RemoveFromDiscoveredFiles_Click(object sender, EventArgs e)
         {
+            DoRemove();
+        }
+
+        private void DoRemove()
+        {
             ListView.SelectedIndexCollection selectedItems = this.FilesList.SelectedIndices;
             (from int s in selectedItems orderby s descending select s)
                 .ToList()
@@ -69,6 +74,19 @@ namespace Backup
 
             FileManager.SaveDiscoveredFiles(
                 (from ListViewItem item in FilesList.Items select new FileDetail(item.Text, item.SubItems[1].Text)).ToArray());
+        }
+
+        private void Remove_Click(object sender, EventArgs e)
+        {
+            DoRemove();
+        }
+
+        private void FilesList_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (this.FilesList.SelectedIndices.Count > 0)
+                this.Remove.Enabled = true;
+            else
+                this.Remove.Enabled = false;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Backup
                 if (result == DialogResult.Yes)
                 {
                     SaveSettings();
-                    this.Close();
+                    Close();
                 }
             }
         }

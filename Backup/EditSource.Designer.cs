@@ -77,18 +77,18 @@
             // Browse
             // 
             this.Browse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Browse.Location = new System.Drawing.Point(120, 110);
+            this.Browse.Location = new System.Drawing.Point(120, 113);
             this.Browse.Name = "Browse";
             this.Browse.Size = new System.Drawing.Size(125, 23);
             this.Browse.TabIndex = 4;
-            this.Browse.Text = "Browse Directory...";
+            this.Browse.Text = "Select Directory...";
             this.Browse.UseVisualStyleBackColor = true;
             this.Browse.Click += new System.EventHandler(this.Browse_Click);
             // 
             // Commit
             // 
             this.Commit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Commit.Location = new System.Drawing.Point(443, 110);
+            this.Commit.Location = new System.Drawing.Point(441, 113);
             this.Commit.Name = "Commit";
             this.Commit.Size = new System.Drawing.Size(75, 23);
             this.Commit.TabIndex = 5;
@@ -99,7 +99,8 @@
             // Cancel
             // 
             this.Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Cancel.Location = new System.Drawing.Point(524, 110);
+            this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.Cancel.Location = new System.Drawing.Point(524, 113);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 6;
@@ -127,8 +128,10 @@
             // 
             // EditSource
             // 
+            this.AcceptButton = this.Commit;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(618, 151);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.IsModifiedOnly);

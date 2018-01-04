@@ -19,8 +19,8 @@ namespace Backup
         {
             InitializeComponent();
 
-            this.Message.Text = "Getting contents...";
-            this.Shown += ArchiveContentsForm_Shown;
+            Message.Text = "Getting contents...";
+            Shown += ArchiveContentsForm_Shown;
         }
 
         private async void ArchiveContentsForm_Shown(object sender, EventArgs e)
@@ -30,24 +30,22 @@ namespace Backup
 
         private async Task PopulateControlsAsync()
         {
-            //this.FilesList.BeginUpdate();
             //var files = await Task.Run(() => FileManager.GetBucketContents());
             var files = await FileManager.GetBucketContentsAsync();
             if (files == null || files.Count() == 0)
             {
-                this.Message.Text = "";
-                this.FilesList.Items.Add(new ListViewItem("No new or changed files"));
-                this.FilesList.Enabled = false;
-                this.Download.Enabled = false;
+                Message.Text = "";
+                FilesList.Items.Add(new ListViewItem("No new or changed files"));
+                FilesList.Enabled = false;
+                Download.Enabled = false;
                 return;
             }
             foreach (var file in files)
             {
-                this.FilesList.Items.Add(new ListViewItem(new string[] { file }));
+                FilesList.Items.Add(new ListViewItem(new string[] { file }));
             }
 
-            //this.FilesList.EndUpdate();
-            this.Message.Text = $"{files.Count()} files have been found";
+            Message.Text = $"{files.Count()} files have been found";
         }
 
         private async void Download_Click(object sender, EventArgs e)

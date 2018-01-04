@@ -146,7 +146,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(402, 292);
+            this.CloseForm.Location = new System.Drawing.Point(402, 293);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -157,7 +157,7 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(488, 292);
+            this.Cancel.Location = new System.Drawing.Point(488, 293);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 11;
@@ -167,11 +167,11 @@
             // CreateOnStart
             // 
             this.CreateOnStart.AutoSize = true;
-            this.CreateOnStart.Location = new System.Drawing.Point(28, 252);
+            this.CreateOnStart.Location = new System.Drawing.Point(28, 255);
             this.CreateOnStart.Name = "CreateOnStart";
-            this.CreateOnStart.Size = new System.Drawing.Size(221, 17);
+            this.CreateOnStart.Size = new System.Drawing.Size(248, 17);
             this.CreateOnStart.TabIndex = 11;
-            this.CreateOnStart.Text = "Create a backup when the program starts";
+            this.CreateOnStart.Text = "Create an archive whenever this program starts";
             this.CreateOnStart.UseVisualStyleBackColor = true;
             // 
             // groupBox1
@@ -331,7 +331,7 @@
             // 
             // AWSCredentials
             // 
-            this.AWSCredentials.Location = new System.Drawing.Point(442, 248);
+            this.AWSCredentials.Location = new System.Drawing.Point(442, 251);
             this.AWSCredentials.Name = "AWSCredentials";
             this.AWSCredentials.Size = new System.Drawing.Size(121, 23);
             this.AWSCredentials.TabIndex = 16;
@@ -358,7 +358,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DestinationForm";
-            this.Text = "Destination of Backup";
+            this.Text = "Backup - Destination of Archive";
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);

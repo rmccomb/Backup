@@ -43,7 +43,7 @@
             // 
             this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(352, 325);
+            this.CloseForm.Location = new System.Drawing.Point(352, 336);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -55,7 +55,7 @@
             // 
             this.Message.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Message.AutoSize = true;
-            this.Message.Location = new System.Drawing.Point(15, 330);
+            this.Message.Location = new System.Drawing.Point(15, 341);
             this.Message.Name = "Message";
             this.Message.Size = new System.Drawing.Size(56, 13);
             this.Message.TabIndex = 11;
@@ -69,7 +69,7 @@
             this.groupBox1.Controls.Add(this.FilesList);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(421, 307);
+            this.groupBox1.Size = new System.Drawing.Size(421, 318);
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Contents";
@@ -84,7 +84,7 @@
             this.FilesList.Location = new System.Drawing.Point(6, 19);
             this.FilesList.MultiSelect = false;
             this.FilesList.Name = "FilesList";
-            this.FilesList.Size = new System.Drawing.Size(409, 282);
+            this.FilesList.Size = new System.Drawing.Size(409, 293);
             this.FilesList.TabIndex = 0;
             this.FilesList.UseCompatibleStateImageBehavior = false;
             this.FilesList.View = System.Windows.Forms.View.Details;
@@ -100,19 +100,20 @@
             // 
             this.Download.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Download.Enabled = false;
-            this.Download.Location = new System.Drawing.Point(256, 325);
+            this.Download.Location = new System.Drawing.Point(247, 336);
             this.Download.Name = "Download";
-            this.Download.Size = new System.Drawing.Size(75, 23);
+            this.Download.Size = new System.Drawing.Size(94, 23);
             this.Download.TabIndex = 12;
             this.Download.Text = "Download";
             this.Download.UseVisualStyleBackColor = true;
             this.Download.Click += new System.EventHandler(this.Download_Click);
             // 
-            // ArchiveContentsForm
+            // BucketContentsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(445, 360);
+            this.CancelButton = this.CloseForm;
+            this.ClientSize = new System.Drawing.Size(445, 371);
             this.Controls.Add(this.Download);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.Message);
@@ -120,7 +121,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "ArchiveContentsForm";
+            this.Name = "BucketContentsForm";
             this.Text = "Bucket Contents";
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);

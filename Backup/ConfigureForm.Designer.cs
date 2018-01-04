@@ -85,11 +85,11 @@
             // 
             // New
             // 
-            this.New.Location = new System.Drawing.Point(411, 195);
+            this.New.Location = new System.Drawing.Point(409, 195);
             this.New.Name = "New";
             this.New.Size = new System.Drawing.Size(77, 23);
             this.New.TabIndex = 1;
-            this.New.Text = "New...";
+            this.New.Text = "Add...";
             this.New.UseVisualStyleBackColor = true;
             this.New.Click += new System.EventHandler(this.New_Click);
             // 
@@ -183,7 +183,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ConfigureForm";
-            this.Text = "Configure";
+            this.Text = "Backup - Configure";
             this.groupBox1.ResumeLayout(false);
             this.ResumeLayout(false);
 

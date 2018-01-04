@@ -46,7 +46,7 @@
             // 
             this.CloseForm.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.CloseForm.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.CloseForm.Location = new System.Drawing.Point(547, 325);
+            this.CloseForm.Location = new System.Drawing.Point(546, 325);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -120,9 +120,9 @@
             // 
             this.Download.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Download.Enabled = false;
-            this.Download.Location = new System.Drawing.Point(451, 325);
+            this.Download.Location = new System.Drawing.Point(442, 325);
             this.Download.Name = "Download";
-            this.Download.Size = new System.Drawing.Size(75, 23);
+            this.Download.Size = new System.Drawing.Size(94, 23);
             this.Download.TabIndex = 12;
             this.Download.Text = "Download";
             this.Download.UseVisualStyleBackColor = true;
@@ -132,6 +132,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.CloseForm;
             this.ClientSize = new System.Drawing.Size(640, 360);
             this.Controls.Add(this.Download);
             this.Controls.Add(this.CloseForm);

@@ -3,11 +3,9 @@
 - processes discovered files - ok
 
 AWS
-- S3 bucket - ok
-- Glacier
 - User defined Tags for S3 and Glacier
-- List of Archive zip files, option to retrieve
-- AWS Region
+- AWS account Test connection function
+- Delete Glacier item
 
 GlacierBackupPolicy created for basic add, create, tag and delete archives and vaults.
 - backup-user granted policy
@@ -27,13 +25,7 @@ Expedited (On-Demand, Provisioned)
 24 hour window - schedule portions download
 
 
-Local Inventory - option to refresh
-
-
 
 Misc
 ------
-Tidy AWS Account on Configure page
-
 Download menu item
-Reorganise menu (Exit at top)

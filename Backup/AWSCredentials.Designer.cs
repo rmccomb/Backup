@@ -80,7 +80,7 @@
             // 
             this.Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(410, 89);
+            this.Cancel.Location = new System.Drawing.Point(410, 81);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 17;
@@ -90,7 +90,7 @@
             // Commit
             // 
             this.Commit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Commit.Location = new System.Drawing.Point(319, 89);
+            this.Commit.Location = new System.Drawing.Point(323, 81);
             this.Commit.Name = "Commit";
             this.Commit.Size = new System.Drawing.Size(75, 23);
             this.Commit.TabIndex = 16;
@@ -104,7 +104,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(506, 129);
+            this.ClientSize = new System.Drawing.Size(506, 117);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.Commit);

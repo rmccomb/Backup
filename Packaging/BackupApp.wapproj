@@ -38,10 +38,11 @@
     <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.14393.0</TargetPlatformMinVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <PackageCertificateKeyFile>Packaging_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>Packaging_StoreKey.pfx</PackageCertificateKeyFile>
     <EntryPointProjectUniqueName>..\Backup\Backup.Application.csproj</EntryPointProjectUniqueName>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>neutral</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>304E52C1CD79027C6A7F384839CDA14A326662AB</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AppxBundle>Always</AppxBundle>
@@ -123,6 +124,8 @@
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <None Include="Packaging_StoreKey.pfx" />
+    <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Backup\Backup.Application.csproj" />

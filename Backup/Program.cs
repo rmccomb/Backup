@@ -1,12 +1,10 @@
 ﻿using Backup.Logic;
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
-using System.Linq;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -14,9 +12,11 @@ namespace Backup
 {
     internal class Program
     {
+        public const string ProgramName = "tiz.digital Backup";
         static CancellationTokenSource cts;
         public static event CloseHandler Close;
         public delegate void CloseHandler();
+        static Mutex _mut;
 
         /// <summary>
         /// The main entry point for the application.
@@ -24,6 +24,18 @@ namespace Backup
         [STAThread]
         static void Main()
         {
+            // Want only one instance of the program running
+            var exists = Mutex.TryOpenExisting(ProgramName, out _mut);
+            if (exists)
+            {
+                Application.Exit();
+                return;
+            }
+            else
+                _mut = new Mutex(true, ProgramName);
+
+            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -57,6 +69,23 @@ namespace Backup
             }
 
             Application.Run();
+        }
+
+        private static void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        {
+            //e.Reason == SessionEndReasons.
+            //e.Cancel
+            //if (DialogResult.Yes == MessageBox.Show(ProgramName, "Do you want to run a backup before logging off?", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if((e.Reason == SessionEndReasons.Logoff || e.Reason == SessionEndReasons.SystemShutdown)
+                && FileManager.GetSettings().IsBackupOnLogoff)
+            {
+                FileManager.InvokeBackup();
+                //e.Cancel = true;
+            }
+            //else
+            //{
+            //    e.Cancel = false;
+            //}
         }
 
         private static Task ProcessArchiveModelAsync()
@@ -97,5 +126,42 @@ namespace Backup
             }
         }
 
+        //private static int WM_QUERYENDSESSION = 0x11;
+        //private static bool systemShutdown = false;
+        //protected override void WndProc(ref System.Windows.Forms.Message m)
+        //{
+        //    if (m.Msg == WM_QUERYENDSESSION)
+        //    {
+        //        MessageBox.Show("queryendsession: this is a logoff, shutdown, or reboot");
+        //        systemShutdown = true;
+        //    }
+
+        //    // If this is WM_QUERYENDSESSION, the closing event should be  
+        //    // raised in the base WndProc.  
+        //    base.WndProc(ref m);
+
+        //} //WndProc   
+
+        //private void Form1_Closing(
+        //    System.Object sender,
+        //    System.ComponentModel.CancelEventArgs e)
+        //{
+        //    if (systemShutdown)
+        //    // Reset the variable because the user might cancel the   
+        //    // shutdown.  
+        //    {
+        //        systemShutdown = false;
+        //        if (DialogResult.Yes == MessageBox.Show("My application",
+        //            "Do you want to save your work before logging off?",
+        //            MessageBoxButtons.YesNo))
+        //        {
+        //            e.Cancel = true;
+        //        }
+        //        else
+        //        {
+        //            e.Cancel = false;
+        //        }
+        //    }
+        //}
     }
 }

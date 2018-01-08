@@ -41,7 +41,6 @@
             this.CloseForm = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.Cancel = new System.Windows.Forms.Button();
-            this.CreateOnStart = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.S3Region = new System.Windows.Forms.ComboBox();
             this.aWSRegionEndPointBindingSource = new System.Windows.Forms.BindingSource(this.components);
@@ -146,7 +145,7 @@
             // 
             // CloseForm
             // 
-            this.CloseForm.Location = new System.Drawing.Point(402, 293);
+            this.CloseForm.Location = new System.Drawing.Point(402, 250);
             this.CloseForm.Name = "CloseForm";
             this.CloseForm.Size = new System.Drawing.Size(75, 23);
             this.CloseForm.TabIndex = 10;
@@ -157,22 +156,12 @@
             // Cancel
             // 
             this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(488, 293);
+            this.Cancel.Location = new System.Drawing.Point(488, 250);
             this.Cancel.Name = "Cancel";
             this.Cancel.Size = new System.Drawing.Size(75, 23);
             this.Cancel.TabIndex = 11;
             this.Cancel.Text = "Cancel";
             this.Cancel.UseVisualStyleBackColor = true;
-            // 
-            // CreateOnStart
-            // 
-            this.CreateOnStart.AutoSize = true;
-            this.CreateOnStart.Location = new System.Drawing.Point(28, 255);
-            this.CreateOnStart.Name = "CreateOnStart";
-            this.CreateOnStart.Size = new System.Drawing.Size(248, 17);
-            this.CreateOnStart.TabIndex = 11;
-            this.CreateOnStart.Text = "Create an archive whenever this program starts";
-            this.CreateOnStart.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -331,7 +320,7 @@
             // 
             // AWSCredentials
             // 
-            this.AWSCredentials.Location = new System.Drawing.Point(442, 251);
+            this.AWSCredentials.Location = new System.Drawing.Point(28, 250);
             this.AWSCredentials.Name = "AWSCredentials";
             this.AWSCredentials.Size = new System.Drawing.Size(121, 23);
             this.AWSCredentials.TabIndex = 16;
@@ -345,11 +334,10 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(587, 331);
+            this.ClientSize = new System.Drawing.Size(587, 289);
             this.Controls.Add(this.AWSCredentials);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.CreateOnStart);
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.CloseForm);
             this.Controls.Add(this.groupBox2);
@@ -367,7 +355,6 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -382,7 +369,6 @@
         private System.Windows.Forms.Button CloseForm;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.Button Cancel;
-        private System.Windows.Forms.CheckBox CreateOnStart;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label1;

@@ -28,4 +28,5 @@ Expedited (On-Demand, Provisioned)
 
 Misc
 ------
-Download menu item
+Multi-lingual
+Download - set folder, S3 & Glacier multi-select and download

@@ -12,6 +12,7 @@ namespace Backup
     internal class ProcessIcon : IDisposable
     {
         NotifyIcon notifyIcon;
+        bool isNotifying;
 
         public ProcessIcon()
         {
@@ -28,7 +29,7 @@ namespace Backup
             // Put the icon in the system tray and allow it react to mouse clicks.          
             //notifyIcon.MouseClick += new MouseEventHandler(NotifyIcon_MouseClick);
             notifyIcon.Icon = Resources.Save;
-            notifyIcon.Text = "Backup Utility";
+            notifyIcon.Text = Program.ProgramName;
             notifyIcon.Visible = true;
 
             // Attach a context menu.
@@ -47,17 +48,14 @@ namespace Backup
         {
             CreateNotifyWarning(warningMessage);
         }
-
         private void FileManager_DownloadSuccess(string successMessage)
         {
             CreateNotifyInfo(successMessage);
         }
-
         private void FileManager_DownloadError(string errorMessage)
         {
             CreateNotifyError(errorMessage);
         }
-
         private void FileManager_BackupSuccess(string successMessage)
         {
             CreateNotifyInfo(successMessage);
@@ -86,22 +84,54 @@ namespace Backup
         public void Dispose()
         {
             Debug.WriteLine("Disposing");
+            while (isNotifying) ; // Wait for notifications to finish
             notifyIcon.Dispose();
             notifyIcon = null;
         }
 
         internal void NotifyUser(string title, string message, ToolTipIcon icon)
         {
-            notifyIcon.ShowBalloonTip(5000, title, message, icon);
+            try
+            {
+                isNotifying = true; // May fix issue with notifications loosing parent application identification in certain situations (logoff?)
+
+                // WriteEventLog(message, icon); // TODO requires Admin privileges and installutil (cmd line) for Installers
+
+                // Window Notification
+                notifyIcon.ShowBalloonTip(3000, title, message, icon);
+
+                isNotifying = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                MessageBox.Show(ex.Message, Program.ProgramName + " Error");
+            }
         }
 
-        //void NotifyIcon_MouseClick(object sender, MouseEventArgs e)
-        //{
-            //if (e.Button == MouseButtons.Left)
-            //{
-            //    System.Diagnostics.Process.Start("explorer", null);
-            //}
-        //}
+        private static void WriteEventLog(string message, ToolTipIcon icon)
+        {
+            // Log to Event Log
+            // Create the source, if it does not already exist.
+            if (!EventLog.SourceExists(Program.ProgramName))
+            {
+                // TODO create source in EventLogInstaller
+                EventLog.CreateEventSource(Program.ProgramName, null);
+            }
+            switch (icon)
+            {
+                case ToolTipIcon.Error:
+                    EventLog.WriteEntry(Program.ProgramName, message, EventLogEntryType.Error);
+                    break;
+                case ToolTipIcon.Info:
+                    EventLog.WriteEntry(Program.ProgramName, message, EventLogEntryType.Information);
+                    break;
+                case ToolTipIcon.Warning:
+                default:
+                    EventLog.WriteEntry(Program.ProgramName, message, EventLogEntryType.Warning);
+                    break;
+            }
+        }
     }
 }
 

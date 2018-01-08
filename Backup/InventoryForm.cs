@@ -64,7 +64,7 @@ namespace Backup
                         CreateMessage(item.GlacierJobStatus)
                     }));
             }
-            this.Message.Text = $"Inventory as at {inventory.InventoryDate}";
+            this.Message.Text = $"Inventory last updated on {inventory.InventoryDate.ToString(System.Globalization.CultureInfo.CurrentCulture)}";
             this.Download.Enabled = false;
         }
 

@@ -35,5 +35,9 @@ namespace Backup.Logic
         public bool IsSMSContactEnabled { get; set; }
 
         public DateTime InventoryUpdateRequested { get; set; }
+
+        public bool IsBackupOnLogoff { get; set; }
+
+        public bool IsLaunchOnLogon { get; set; }
     }
 }

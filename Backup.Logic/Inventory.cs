@@ -44,7 +44,7 @@ namespace Backup.Logic
     [Serializable]
     public class ArchiveModelList : List<ArchiveModel>
     {
-        public string InventoryDate { get; set; }
+        public DateTime InventoryDate { get; set; }
     }
 
 }

@@ -20,6 +20,7 @@ namespace Backup.Logic
         public string OutputDirectory { get; set; }
         public string ArchiveId { get; internal set; }
         public string FileName { get; internal set; }
+        public DateTime DateRequested { get; internal set; }
 
         public string GetOutputFile() => Path.Combine(OutputDirectory, FileName ?? TopicFileName);
     }

@@ -119,6 +119,8 @@ namespace Backup.Logic
 
         public static void SaveSettings(Settings settings)
         {
+            Debug.WriteLine("SaveSettings");
+
             var formatter = new BinaryFormatter();
             var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
             File.Delete(settingsFileName);
@@ -361,7 +363,7 @@ namespace Backup.Logic
                     var s = new DataContractJsonSerializer(typeof(Inventory));
                     var inventory = (Inventory)s.ReadObject(file);
                     var dt = DateTime.Parse(inventory.InventoryDate);
-                    var model = new ArchiveModelList { InventoryDate = dt.ToString("dd-MM-yyyy") };
+                    var model = new ArchiveModelList { InventoryDate = dt };
                     foreach (var archive in inventory.ArchiveList)
                     {
                         var topicFile = GetArchiveTopicFileName(archive.ArchiveId);
@@ -518,6 +520,15 @@ namespace Backup.Logic
                     BackupError?.Invoke($"A network error occurred ({((System.Net.WebException)azex.InnerException).Status})");
                     return GlacierResult.Incomplete;
                 }
+                if (azex.StatusCode == System.Net.HttpStatusCode.BadRequest 
+                    //&& topic.Status == GlacierResult.JobRequested 
+                    && azex.Message.Contains("The specified queue does not exist")
+                    && DateTime.Now - topic.DateRequested < new TimeSpan(24, 0, 0))
+                {
+                    // Job was recently requested and the queue has not been created yet
+                    Debug.WriteLine("Job request may be in progress");
+                    return GlacierResult.JobRequested;
+                }
 
                 // TODO Check expiry?
                 // Glacier ref: "A job ID will not expire for at least 24 hours after Amazon Glacier completes the job."
@@ -633,6 +644,7 @@ namespace Backup.Logic
                 var initJobResponse = client.InitiateJob(initJobRequest);
                 topic.JobId = initJobResponse.JobId;
                 topic.Status = GlacierResult.JobRequested;
+                topic.DateRequested = DateTime.Now;
                 SaveTopicFile(topic);
             }
         }
@@ -671,7 +683,8 @@ namespace Backup.Logic
                 TopicFileName = topicFileName,
                 OutputDirectory = outputDirectory,
                 ArchiveId = archiveId,
-                FileName = filename
+                FileName = filename,
+                DateRequested = DateTime.Now
             };
             long ticks = DateTime.Now.Ticks;
             var settings = GetSettings();
@@ -868,6 +881,10 @@ namespace Backup.Logic
         {
             try
             {
+                //// TEST simulate backup on shutdown
+                //Thread.Sleep(60 * 1000);
+                //return;
+
                 var sources = GetSources();
                 var files = DiscoverFiles(sources);
                 SaveDiscoveredFiles(files);

@@ -75,7 +75,6 @@ namespace Backup
             _awsAccessKey = settings.AWSAccessKeyID;
             _awsSecret = settings.AWSSecretAccessKey;
 
-            CreateOnStart.Checked = settings.CreateBackupOnStart;
         }
 
         private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
@@ -132,7 +131,6 @@ namespace Backup
                 settings.AWSS3Bucket != this.S3BucketName.Text ||
                 settings.IsFileSystemEnabled != this.IsFileSystem.Checked ||
                 settings.IsS3BucketEnabled != this.IsS3Bucket.Checked ||
-                settings.CreateBackupOnStart != this.CreateOnStart.Checked ||
                 settings.IsGlacierEnabled != this.IsGlacier.Checked ||
                 settings.AWSGlacierVault != this.GlacierVaultName.Text ||
                 settings.AWSS3Region != (AWSRegionEndPoint)this.S3Region.SelectedItem ||
@@ -166,7 +164,6 @@ namespace Backup
                 AWSS3Bucket = this.S3BucketName.Text,
                 IsS3BucketEnabled = this.IsS3Bucket.Checked,
                 AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem,
-                CreateBackupOnStart = this.CreateOnStart.Checked,
                 IsGlacierEnabled = this.IsGlacier.Checked,
                 AWSGlacierVault = this.GlacierVaultName.Text,
                 AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem,

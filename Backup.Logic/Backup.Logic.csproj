@@ -64,6 +64,7 @@
     <Compile Include="DownloadObject.cs" />
     <Compile Include="FileDetail.cs" />
     <Compile Include="FileManager.cs" />
+    <Compile Include="FileSource.cs" />
     <Compile Include="GlacierResult.cs" />
     <Compile Include="Inventory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

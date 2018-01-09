@@ -649,34 +649,6 @@ namespace Backup.Logic
             }
         }
 
-        //private static void InitiateArchiveRetrievalOLD(Topic topic)
-        //{
-        //    // Make the call to AWS Glacier to get archive
-        //    var settings = GetSettings();
-        //    using (var client = new AmazonGlacierClient(
-        //                settings.AWSAccessKeyID,
-        //                settings.AWSSecretAccessKey,
-        //                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
-        //    {
-        //        InitiateJobRequest initJobRequest = new InitiateJobRequest
-        //        {
-        //            VaultName = settings.AWSGlacierVault,
-        //            JobParameters = new JobParameters
-        //            {
-        //                Type = "archive-retrieval",
-        //                ArchiveId = topic.ArchiveId,
-        //                SNSTopic = topic.TopicARN,
-        //            }
-        //        };
-
-        //        //Debug.WriteLine("Job requested: " + initJobRequest.JobParameters.Type);
-        //        InitiateJobResponse initJobResponse = client.InitiateJob(initJobRequest);
-        //        topic.JobId = initJobResponse.JobId;
-        //        topic.Status = GlacierResult.DownloadRequested;
-        //        SaveTopicFile(topic);
-        //    }
-        //}
-
         private static Topic SetupTopicAndSubscriptions(string topicFileName, string outputDirectory, string archiveId = null, string filename = null)
         {
             var topic = new Topic {
@@ -946,33 +918,44 @@ namespace Backup.Logic
                 archiveDir = Path.Combine(tempDir, ArchiveFolder);
 
             // Make the archive
-            var zipArchivePath = DoCopy(archiveDir, files);
+            var fileSource = DoCopy(archiveDir, files);
 
             // Upload the zip archive
             if (settings.IsS3BucketEnabled)
             {
-                UploadS3Archive(settings, zipArchivePath);
+                UploadS3Archive(settings, fileSource.ZipFileArchive);
 
                 BackupSuccess?.Invoke($"Backup uploaded to S3 Bucket {settings.AWSS3Bucket}");
 
                 // Clean up if the user didn't want the File System option
                 if (!settings.IsFileSystemEnabled)
                 {
-                    File.Delete(zipArchivePath);
+                    File.Delete(fileSource.ZipFileArchive);
                 }
             }
 
             if (settings.IsGlacierEnabled)
             {
-                UploadGlacierArchive(settings, zipArchivePath);
+                UploadGlacierArchive(settings, fileSource.ZipFileArchive);
 
                 BackupSuccess?.Invoke($"Backup uploaded to Glacier Vault {settings.AWSGlacierVault}");
 
                 // Clean up if the user didn't want the File System option
                 if (!settings.IsFileSystemEnabled)
                 {
-                    File.Delete(zipArchivePath);
+                    File.Delete(fileSource.ZipFileArchive);
                 }
+            }
+
+            try
+            {
+                // Clean up source directory created for zip archive
+                DeleteZipSource(fileSource.UniqueArchiveDir);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                BackupWarning?.Invoke($"An error occurred removing the temporary archive files: {fileSource.UniqueArchiveDir}");
             }
         }
 
@@ -1039,14 +1022,9 @@ namespace Backup.Logic
         /// <summary>
         /// Copy files to the given directory and return the zip file name
         /// </summary>
-        private static string DoCopy(string archiveDir, string[] files)
+        private static FileSource DoCopy(string archiveDir, string[] files)
         {
-            int fileCount = 0;
-            // Create processing file and copy logging files to processing file
-            //var processing = Path.Combine(tempDir, ProcessingName);
-            //using (var processWriter = File.CreateText(processing))
-            //{
-            var uniqueArchiveDir = GetArchiveUniqueName(archiveDir);
+            var fileSource = new FileSource { UniqueArchiveDir = GetArchiveUniqueName(archiveDir) };
 
             foreach (var line in files)
             {
@@ -1062,12 +1040,14 @@ namespace Backup.Logic
                     for (int i = 0; i < splits.Length - 1; i++)
                         subpathDir += "\\" + splits[i];
 
-                    var newDir = Path.Combine(uniqueArchiveDir, subpathDir.TrimStart('\\'));
+                    var newDir = Path.Combine(fileSource.UniqueArchiveDir, subpathDir.TrimStart('\\'));
                     var di = Directory.CreateDirectory(newDir);
                     Debug.Write(di);
 
-                    File.Copy(filepath, Path.Combine(uniqueArchiveDir, subpath.TrimStart('\\')), true);
-                    fileCount++;
+                    File.Copy(filepath, Path.Combine(fileSource.UniqueArchiveDir, subpath.TrimStart('\\')), true);
+                    File.SetAttributes(filepath, FileAttributes.Normal);
+
+                    fileSource.FileCount++;
                 }
                 catch (Exception ex)
                 {
@@ -1076,19 +1056,17 @@ namespace Backup.Logic
                 }
             }
 
-            if (fileCount > 0)
+            if (fileSource.FileCount > 0)
             {
                 try
                 {
-                    var zipFileArchive = $"{uniqueArchiveDir}.zip";
-
-                    ZipFile.CreateFromDirectory(uniqueArchiveDir, zipFileArchive, CompressionLevel.Optimal, false);
+                    ZipFile.CreateFromDirectory(fileSource.UniqueArchiveDir, fileSource.ZipFileArchive, CompressionLevel.Optimal, false);
 
                     // Clean up folders used to make the zip archive
-                    DeleteZipSource(uniqueArchiveDir);
+                    //DeleteZipSource(fileSource.UniqueArchiveDir);
 
-                    BackupSuccess?.Invoke($"{fileCount} file {(fileCount == 1 ? String.Empty : "s")} copied to {zipFileArchive}");
-                    return zipFileArchive;
+                    BackupSuccess?.Invoke($"{fileSource.FileCount} file {(fileSource.FileCount == 1 ? String.Empty : "s")} copied to {fileSource.ZipFileArchive}");
+                    return fileSource;
                 }
                 catch (Exception ex)
                 {
@@ -1110,7 +1088,9 @@ namespace Backup.Logic
         {
             var files = Directory.EnumerateFiles(folder);
             foreach (var file in files)
+            {
                 File.Delete(file);
+            }
 
             var dirs = Directory.EnumerateDirectories(folder);
             foreach (var dir in dirs)

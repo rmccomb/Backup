@@ -30,3 +30,7 @@ Misc
 ------
 Multi-lingual
 Download - set folder, S3 & Glacier multi-select and download
+
+
+This is an application which runs as a system tray icon.  It is a basic backup application which offers the user a choice of back end storage, ie. file system, AWS S3 AWS Glacier.
+There are options to run backup task automatically (ie. run on log out), or at any time by right-clicking on the STI.  There are various configuration choices for the source files and the target archiving destination.

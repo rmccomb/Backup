@@ -13,8 +13,8 @@ namespace Backup
     internal class Program
     {
         public const string ProgramName = "tiz.digital Backup";
-        static CancellationTokenSource cts;
-        public static event CloseHandler Close;
+        //public static CancellationTokenSource cts;
+        //public static event CloseHandler Close;
         public delegate void CloseHandler();
         static Mutex _mut;
 
@@ -33,6 +33,7 @@ namespace Backup
             }
             else
                 _mut = new Mutex(true, ProgramName);
+
 
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
 
@@ -73,8 +74,8 @@ namespace Backup
 
         private static void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
         {
-            //e.Reason == SessionEndReasons.
-            //e.Cancel
+            // The user is logging off, do a backup if configured
+
             //if (DialogResult.Yes == MessageBox.Show(ProgramName, "Do you want to run a backup before logging off?", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             if((e.Reason == SessionEndReasons.Logoff || e.Reason == SessionEndReasons.SystemShutdown)
                 && FileManager.GetSettings().IsBackupOnLogoff)
@@ -82,10 +83,6 @@ namespace Backup
                 FileManager.InvokeBackup();
                 //e.Cancel = true;
             }
-            //else
-            //{
-            //    e.Cancel = false;
-            //}
         }
 
         private static Task ProcessArchiveModelAsync()

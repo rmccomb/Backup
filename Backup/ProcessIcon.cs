@@ -13,6 +13,7 @@ namespace Backup
     {
         NotifyIcon notifyIcon;
         bool isNotifying;
+        bool backupStarted;
 
         public ProcessIcon()
         {
@@ -26,14 +27,13 @@ namespace Backup
         
         public void Display()
         {
-            // Put the icon in the system tray and allow it react to mouse clicks.          
-            //notifyIcon.MouseClick += new MouseEventHandler(NotifyIcon_MouseClick);
             notifyIcon.Icon = Resources.Save;
             notifyIcon.Text = Program.ProgramName;
             notifyIcon.Visible = true;
 
             // Attach a context menu.
             notifyIcon.ContextMenuStrip = new ContextMenus().Create(notifyIcon);
+            notifyIcon.Click += NotifyIcon_Click;
 
             // Attach event handlers
             FileManager.BackupSuccess += FileManager_BackupSuccess;
@@ -42,6 +42,26 @@ namespace Backup
             FileManager.DownloadSuccess += FileManager_DownloadSuccess;
             FileManager.DownloadWarning += FileManager_DownloadWarning;
             FileManager.DownloadError += FileManager_DownloadError;
+            FileManager.BackupStarted += FileManager_BackupStarted;
+            FileManager.BackupCompleted += FileManager_BackupCompleted;
+        }
+
+        private void FileManager_BackupCompleted()
+        {
+            backupStarted = false;
+        }
+
+        private void FileManager_BackupStarted()
+        {
+            backupStarted = true;
+        }
+
+        private void NotifyIcon_Click(object sender, EventArgs e)
+        {
+            var backup = notifyIcon.ContextMenuStrip.Items.Find("Backup", false)[0];
+            backup.Enabled = !backupStarted;
+            var exit = notifyIcon.ContextMenuStrip.Items.Find("Exit", false)[0];
+            exit.Enabled = !backupStarted;
         }
 
         private void FileManager_DownloadWarning(string warningMessage)
@@ -83,7 +103,7 @@ namespace Backup
 
         public void Dispose()
         {
-            Debug.WriteLine("Disposing");
+            Debug.WriteLine("ProcessIcon.Dispose()");
             while (isNotifying) ; // Wait for notifications to finish
             notifyIcon.Dispose();
             notifyIcon = null;

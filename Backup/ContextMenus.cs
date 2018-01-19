@@ -2,8 +2,9 @@
 using System.Windows.Forms;
 using Backup.Properties;
 using Backup.Logic;
-using System.Configuration;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Backup
 {
@@ -16,16 +17,17 @@ namespace Backup
         DestinationForm destinationForm;
         FileListForm fileListForm;
         NotifyIcon icon;
-        CancellationTokenSource cts;
 
         public ContextMenuStrip Create(NotifyIcon icon)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
             this.icon = icon;
-            cts = new CancellationTokenSource();
-            cts.Token.Register(() => FileManager.Cancel());
+
+            //Program.cts.Token.Register(() => FileManager.Cancel());
+            //Program.cts.Token.Register(() => Thread.Sleep(20_000));
 
             var exit = new ToolStripMenuItem();
+            exit.Name = "Exit";
             exit.Text = "Exit";
             exit.Click += new EventHandler(Exit_Click);
             menu.Items.Add(exit);
@@ -34,22 +36,25 @@ namespace Backup
             menu.Items.Add(sep);
 
             var configure = new ToolStripMenuItem();
+            configure.Name = "Configure";
             configure.Text = "Configure...";
             configure.Click += new EventHandler(Configure_Click);
             menu.Items.Add(configure);
 
-            var item = new ToolStripMenuItem();
-            item.Text = "Discover files...";
-            item.Click += new EventHandler(Discover_Click);
-            item.Image = Resources.StartPoint_16x;
-            menu.Items.Add(item);
+            var discover = new ToolStripMenuItem();
+            discover.Name = "Discover";
+            discover.Text = "Discover files...";
+            discover.Click += new EventHandler(Discover_Click);
+            discover.Image = Resources.StartPoint_16x;
+            menu.Items.Add(discover);
 
             var backup = new ToolStripMenuItem();
+            backup.Name = "Backup";
             backup.Text = "Backup now";
             backup.Click += new EventHandler(Backup_Click);
             backup.Image = Resources.Open_16x;
             menu.Items.Add(backup);
-            
+                        
             return menu;
         }
 
@@ -83,11 +88,11 @@ namespace Backup
             this.configForm = null;
         }
 
-        private void Backup_Click(object sender, EventArgs e)
+        private async void Backup_Click(object sender, EventArgs e)
         {
             try
             {
-                FileManager.InvokeBackup();
+                await Task.Run(() => FileManager.InvokeBackup());
             }
             catch (Exception ex)
             {
@@ -112,8 +117,6 @@ namespace Backup
 
         private void Exit_Click(object sender, EventArgs e)
         {
-            this.cts.Cancel();
-            this.cts.Dispose();
             this.icon.Visible = false;
             Application.Exit();
         }

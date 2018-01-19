@@ -51,6 +51,11 @@ namespace Backup.Logic
         public const string SourcesFileName = "bbackup.sources.dat";
 
         #region events
+        public static event BackupStartedHandler BackupStarted;
+        public delegate void BackupStartedHandler();
+        public static event BackupCompletedHandler BackupCompleted;
+        public delegate void BackupCompletedHandler();
+
         public static event BackupSuccessHandler BackupSuccess;
         public delegate void BackupSuccessHandler(string successMessage);
         public static event BackupWarningHandler BackupWarning;
@@ -85,12 +90,6 @@ namespace Backup.Logic
             "    ]" +
             "}";
         #endregion
-
-        static bool isCancelling = false;
-        static public void Cancel()
-        {
-            isCancelling = true;
-        }
 
         /// <summary>
         /// Get the configured temp directory from application settings or, 
@@ -407,9 +406,6 @@ namespace Backup.Logic
             {
                 foreach (var m in model)
                 {
-                    if (isCancelling)
-                        break;
-
                     if (m.ArchiveTopicFilePath != null)
                     {
                         var topicFile = GetArchiveTopicFileName(m.ArchiveId);
@@ -853,8 +849,15 @@ namespace Backup.Logic
         {
             try
             {
-                //// TEST simulate backup on shutdown
-                //Thread.Sleep(60 * 1000);
+                BackupStarted?.Invoke();
+
+                //while (!cts.IsCancellationRequested)
+                //{
+                //    Thread.Sleep(1000);
+                //    Debug.WriteLine("WORKING");
+                //}
+                //Debug.WriteLine("COMPLETE");
+                //isWorking = false;
                 //return;
 
                 var sources = GetSources();
@@ -862,6 +865,8 @@ namespace Backup.Logic
                 SaveDiscoveredFiles(files);
                 CopyFiles();
                 UpdateTimestamp(sources);
+
+                BackupCompleted?.Invoke();
             }
             catch (Exception ex)
             {
@@ -871,15 +876,19 @@ namespace Backup.Logic
         }
 
         /// <summary>
-        /// Invoke backup of the current files list, possibly modified by user
+        /// Invoke backup of the discovered files list, possibly modified by user
         /// </summary>
         static public void InvokeBackupFromUser()
         {
             try
             {
-                var sources = GetSources();
+                BackupStarted?.Invoke();
+
                 CopyFiles();
-                UpdateTimestamp(sources);
+
+                UpdateTimestamp(GetSources());
+
+                BackupCompleted?.Invoke();
             }
             catch (Exception ex)
             {
@@ -1042,10 +1051,24 @@ namespace Backup.Logic
 
                     var newDir = Path.Combine(fileSource.UniqueArchiveDir, subpathDir.TrimStart('\\'));
                     var di = Directory.CreateDirectory(newDir);
-                    Debug.Write(di);
+                    //Debug.Write(di);
 
-                    File.Copy(filepath, Path.Combine(fileSource.UniqueArchiveDir, subpath.TrimStart('\\')), true);
-                    File.SetAttributes(filepath, FileAttributes.Normal);
+                    try
+                    {
+                        var dest = Path.Combine(fileSource.UniqueArchiveDir, subpath.TrimStart('\\'));
+                        File.Copy(filepath, dest, true);
+                        File.SetAttributes(dest, FileAttributes.Normal);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        Debug.WriteLine("UnauthorizedAccessException: " + ex.Message);
+                        BackupWarning?.Invoke($"Unauthorized access error for {filepath}. File will be skipped.");
+                    }
+                    catch (IOException io)
+                    {
+                        Debug.WriteLine("IOException: " + io.Message);
+                        BackupWarning?.Invoke($"IO Error for {filepath}. File will be skipped.");
+                    }
 
                     fileSource.FileCount++;
                 }
@@ -1080,7 +1103,7 @@ namespace Backup.Logic
 
         private static void DeleteZipSource(string zipSource)
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(250);
             DeleteFolderContents(zipSource);
         }
 

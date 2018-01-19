@@ -17,7 +17,7 @@ Download function - S3 ok, zip renames if already present, asyncronous methods
 Glacier put/get operations
 --------------------------
 Put - retain ArchiveId
-Large size chunking
+Issue: Large size chunking
 
 Get:
 Retrieval Options (Expedited, Standard, Bulk)

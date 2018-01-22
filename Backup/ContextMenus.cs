@@ -36,8 +36,8 @@ namespace Backup
             menu.Items.Add(sep);
 
             var configure = new ToolStripMenuItem();
-            configure.Name = "Configure";
-            configure.Text = "Configure...";
+            configure.Name = "Open";
+            configure.Text = "Open...";
             configure.Click += new EventHandler(Configure_Click);
             menu.Items.Add(configure);
 

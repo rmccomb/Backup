@@ -23,22 +23,6 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Backup.Logic\Backup.Logic.csproj">
-      <Name>Backup.Logic</Name>
-      <Project>{8a29e36d-fbbf-4dfc-b0e0-9d11159b7596}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\Backup.Test\Backup.Test.csproj">
-      <Name>Backup.Test</Name>
-      <Project>{7c58828b-895f-483c-8d6d-d6c1175b287a}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
     <ProjectReference Include="..\Backup\Backup.Application.csproj">
       <Name>Backup.Application</Name>
       <Project>{bdc73ccf-975b-4080-a80e-9063777bffd8}</Project>

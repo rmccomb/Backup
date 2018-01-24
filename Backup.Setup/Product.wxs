@@ -2,22 +2,20 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="810552EC-25E8-409E-9DFE-7A2453BC09AE" 
            Manufacturer="tiz.digital" 
-           Name="Backup" 
+           Name="tiz.digital Backup" 
            Language="1033" 
            Version="1.0.0.0" 
            UpgradeCode="bb88a907-3c32-4ee2-8106-856e97f5e3a5">
-    
 		<Package Id="*" InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 		<MajorUpgrade DowngradeErrorMessage="A newer version of Backup is already installed." />
 		<Media Id="1" Cabinet="tiz.digital.backup.cab" EmbedCab="yes" />
-		<Feature Id="ProductFeature" Title="SetupProject1" Level="1">
+		<Feature Id="ProductFeature" Title="SetupProject1" ConfigurableDirectory='INSTALLFOLDER' Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentRef Id="Executable" />
       <ComponentRef Id="ApplicationShortcut" />
     </Feature>
     <Icon Id="tiz.digital.backup.exe" SourceFile="..\Backup\Resources\Save.ico"/>
     <Property Id ="EXECUTABLE" Value="tiz.digital Backup.exe" />
-    
 	</Product>
 
 	<Fragment>
@@ -46,9 +44,7 @@
         <RegistryValue Root="HKCU" Key="Software\Microsoft\tiz.digital Backup" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
     </DirectoryRef>
-	</Fragment>
 
-	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
 			 <Component Id="ProductComponent" Guid="10ACCB37-527A-4D29-9573-66CE37019638"> 

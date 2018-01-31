@@ -30,35 +30,49 @@ namespace Backup
 
         private async Task PopulateControlsAsync()
         {
-            //var files = await Task.Run(() => FileManager.GetBucketContents());
-            var files = await FileManager.GetBucketContentsAsync();
-            if (files == null || files.Count() == 0)
+            try
             {
-                Message.Text = "";
-                FilesList.Items.Add(new ListViewItem("No new or changed files"));
-                FilesList.Enabled = false;
-                Download.Enabled = false;
-                return;
-            }
-            foreach (var file in files)
-            {
-                FilesList.Items.Add(new ListViewItem(new string[] { file }));
-            }
+                //var files = await Task.Run(() => FileManager.GetBucketContents());
+                var files = await FileManager.GetBucketContentsAsync();
+                if (files == null || files.Count() == 0)
+                {
+                    Message.Text = "";
+                    FilesList.Items.Add(new ListViewItem("No new or changed files"));
+                    FilesList.Enabled = false;
+                    Download.Enabled = false;
+                    return;
+                }
+                foreach (var file in files)
+                {
+                    FilesList.Items.Add(new ListViewItem(new string[] { file }));
+                }
 
-            Message.Text = $"{files.Count()} files have been found";
+                Message.Text = $"{files.Count()} files have been found";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
+            }
         }
 
         private async void Download_Click(object sender, EventArgs e)
         {
-            if(String.IsNullOrEmpty(this.downloadPath))
-                this.downloadPath = FileManager.GetTempDirectory();
-
-            this.folderBrowserDialog1.SelectedPath = this.downloadPath;
-            var result = this.folderBrowserDialog1.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                this.downloadPath = this.folderBrowserDialog1.SelectedPath;
-                await FileManager.DownloadS3ObjectAsync(this.downloadPath, this.FilesList.SelectedItems[0].Text);
+                if (String.IsNullOrEmpty(this.downloadPath))
+                    this.downloadPath = FileManager.GetTempDirectory();
+
+                this.folderBrowserDialog1.SelectedPath = this.downloadPath;
+                var result = this.folderBrowserDialog1.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    this.downloadPath = this.folderBrowserDialog1.SelectedPath;
+                    await FileManager.DownloadS3ObjectAsync(this.downloadPath, this.FilesList.SelectedItems[0].Text);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
             }
         }
 

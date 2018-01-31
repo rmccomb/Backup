@@ -52,26 +52,33 @@ namespace Backup
 
         private void PopulateControls()
         {
-            this.FilesList.BeginUpdate();
-
-            var sources = FileManager.GetSources();
-            var files = FileManager.DiscoverFiles(sources);
-            FileManager.SaveDiscoveredFiles(files);
-            if (files == null || files.Count() == 0)
+            try
             {
-                this.Message.Text = "";
-                this.FilesList.Items.Add(new ListViewItem("No new or changed files"));
-                this.FilesList.Enabled = false;
-                this.Backup.Enabled = false;
-                return;
-            }
-            foreach (var file in files)
-            {
-                this.FilesList.Items.Add(new ListViewItem(new string[] {file.FilePath, file.SubPath}));
-            }
+                this.FilesList.BeginUpdate();
 
-            this.FilesList.EndUpdate();
-            this.Message.Text = $"{files.Count()} files have been created or changed since the last backup";
+                var sources = FileManager.GetSources();
+                var files = FileManager.DiscoverFiles(sources);
+                FileManager.SaveDiscoveredFiles(files);
+                if (files == null || files.Count() == 0)
+                {
+                    this.Message.Text = "";
+                    this.FilesList.Items.Add(new ListViewItem("No new or changed files"));
+                    this.FilesList.Enabled = false;
+                    this.Backup.Enabled = false;
+                    return;
+                }
+                foreach (var file in files)
+                {
+                    this.FilesList.Items.Add(new ListViewItem(new string[] { file.FilePath, file.SubPath }));
+                }
+
+                this.FilesList.EndUpdate();
+                this.Message.Text = $"{files.Count()} files have been created or changed since the last backup";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
+            }
         }
 
         private async void Backup_Click(object sender, EventArgs e)
@@ -100,14 +107,21 @@ namespace Backup
 
         private void DoRemove()
         {
-            ListView.SelectedIndexCollection selectedItems = this.FilesList.SelectedIndices;
-            (from int s in selectedItems orderby s descending select s)
-                .ToList()
-                .ForEach(i =>
-                    this.FilesList.Items.RemoveAt(i));
+            try
+            {
+                ListView.SelectedIndexCollection selectedItems = this.FilesList.SelectedIndices;
+                (from int s in selectedItems orderby s descending select s)
+                    .ToList()
+                    .ForEach(i =>
+                        this.FilesList.Items.RemoveAt(i));
 
-            FileManager.SaveDiscoveredFiles(
-                (from ListViewItem item in FilesList.Items select new FileDetail(item.Text, item.SubItems[1].Text)).ToArray());
+                FileManager.SaveDiscoveredFiles(
+                    (from ListViewItem item in FilesList.Items select new FileDetail(item.Text, item.SubItems[1].Text)).ToArray());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
+            }
         }
 
         private void Remove_Click(object sender, EventArgs e)

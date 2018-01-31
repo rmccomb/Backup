@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Backup.Test
 {
@@ -85,6 +86,27 @@ namespace Backup.Test
                 tcs.SetResult(true);
             }).Change(1000, Timeout.Infinite);
             return tcs.Task;
+        }
+
+        [TestMethod]
+        public void GetDocuments()
+        {
+            var startPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var fileList = new List<string>();
+            var pattern = new string[] { "*.txt", "*.doc" };
+            foreach (var p in pattern)
+            {
+                try
+                {
+                    var files = Directory.GetFiles(startPath, p, SearchOption.AllDirectories);
+                    fileList.AddRange(files);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+            fileList.ForEach(f => Debug.WriteLine(f));
         }
     }
 }

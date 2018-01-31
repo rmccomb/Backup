@@ -785,7 +785,8 @@ namespace Backup.Logic
             DateTime fromDate)
         {
             var changed = new List<FileDetail>();
-            var files = Directory.GetFiles(directory, pattern, SearchOption.AllDirectories);
+            var files = new List<string>();
+            GetFiles(directory, pattern, files);
 
             if(isModifiedOnly)
             {
@@ -802,6 +803,35 @@ namespace Backup.Logic
             }
 
             return changed;
+        }
+
+        static void GetFiles(string path, string pattern, List<string> list)
+        {
+            try
+            {
+                DirectoryInfo info = new DirectoryInfo(path);
+                var isDir = info.Attributes.HasFlag(FileAttributes.Directory);
+                var isHidden = info.Attributes.HasFlag(FileAttributes.Hidden);
+                var isSys = info.Attributes.HasFlag(FileAttributes.System);
+                var isReparse = info.Attributes.HasFlag(FileAttributes.ReparsePoint);
+                if (isSys || isHidden /*|| isReparse*/) return;
+
+                list.AddRange(Directory.GetFiles(path, pattern));
+
+                var dirs = Directory.GetDirectories(path);
+                foreach (var d in dirs)
+                {
+                    GetFiles(d, pattern, list);
+                }
+            }
+            catch (Exception ex)
+            {
+                DirectoryInfo info = new DirectoryInfo(path);
+                var att1 = info.Attributes.HasFlag(FileAttributes.Directory);
+
+                Debug.WriteLine(ex.Message);
+                BackupError?.Invoke(ex.Message);
+            }
         }
 
         public static void SaveDiscoveredFiles(IEnumerable<FileDetail> fileDetails)

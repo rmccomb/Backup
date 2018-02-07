@@ -43,7 +43,7 @@
             this.Cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.S3Region = new System.Windows.Forms.ComboBox();
-            this.aWSRegionEndPointBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.S3RegionBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.label7 = new System.Windows.Forms.Label();
             this.ListBucketContents = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
@@ -51,6 +51,7 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.ListInventory = new System.Windows.Forms.Button();
             this.GlacierRegion = new System.Windows.Forms.ComboBox();
+            this.GlacierRegionBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.label8 = new System.Windows.Forms.Label();
             this.IsGlacierLabel = new System.Windows.Forms.Label();
             this.IsGlacier = new System.Windows.Forms.CheckBox();
@@ -59,8 +60,9 @@
             this.AWSCredentials = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.S3RegionBindingSource)).BeginInit();
             this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GlacierRegionBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox2
@@ -181,7 +183,7 @@
             // 
             // S3Region
             // 
-            this.S3Region.DataSource = this.aWSRegionEndPointBindingSource;
+            this.S3Region.DataSource = this.S3RegionBindingSource;
             this.S3Region.DisplayMember = "DisplayName";
             this.S3Region.Enabled = false;
             this.S3Region.FormattingEnabled = true;
@@ -191,9 +193,9 @@
             this.S3Region.TabIndex = 19;
             this.S3Region.ValueMember = "SystemName";
             // 
-            // aWSRegionEndPointBindingSource
+            // S3RegionBindingSource
             // 
-            this.aWSRegionEndPointBindingSource.DataSource = typeof(Backup.Logic.AWSRegionEndPoint);
+            this.S3RegionBindingSource.DataSource = typeof(Backup.Logic.AWSRegionEndPoint);
             // 
             // label7
             // 
@@ -262,7 +264,7 @@
             // 
             // GlacierRegion
             // 
-            this.GlacierRegion.DataSource = this.aWSRegionEndPointBindingSource;
+            this.GlacierRegion.DataSource = this.GlacierRegionBindingSource;
             this.GlacierRegion.DisplayMember = "DisplayName";
             this.GlacierRegion.Enabled = false;
             this.GlacierRegion.FormattingEnabled = true;
@@ -271,6 +273,12 @@
             this.GlacierRegion.Size = new System.Drawing.Size(170, 21);
             this.GlacierRegion.TabIndex = 19;
             this.GlacierRegion.ValueMember = "SystemName";
+            this.GlacierRegion.SelectedIndexChanged += new System.EventHandler(this.GlacierRegion_SelectedIndexChanged);
+            this.GlacierRegion.SelectionChangeCommitted += new System.EventHandler(this.GlacierRegion_SelectionChangeCommitted);
+            // 
+            // GlacierRegionBindingSource
+            // 
+            this.GlacierRegionBindingSource.DataSource = typeof(Backup.Logic.AWSRegionEndPoint);
             // 
             // label8
             // 
@@ -351,9 +359,10 @@
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.aWSRegionEndPointBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.S3RegionBindingSource)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GlacierRegionBindingSource)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -384,8 +393,9 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ComboBox GlacierRegion;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.BindingSource aWSRegionEndPointBindingSource;
+        private System.Windows.Forms.BindingSource S3RegionBindingSource;
         private System.Windows.Forms.Button ListInventory;
         private System.Windows.Forms.Button AWSCredentials;
+        private System.Windows.Forms.BindingSource GlacierRegionBindingSource;
     }
 }

@@ -32,13 +32,18 @@ namespace Backup.Logic
 
         static public bool operator==(AWSRegionEndPoint a, AWSRegionEndPoint b)
         {
+            if ((object)b == null)
+                return false;
+
             return (object)a != null && (object)b != null 
                 && a.SystemName == b.SystemName;
         }
         static public bool operator !=(AWSRegionEndPoint a, AWSRegionEndPoint b)
         {
-            return (object)a != null && (object)b != null 
-                && a.SystemName != b.SystemName;
+            if ((object)a != null && (object)b == null)
+                return true;
+
+            return a.SystemName != b.SystemName;
         }
     }
 
@@ -54,6 +59,12 @@ namespace Backup.Logic
         public static string GetDefaultRegionSystemName()
         {
             return RegionEndpoint.APSoutheast2.SystemName;
+        }
+
+        public static AWSRegionEndPoint GetDefaultRegionEndPoint()
+        {
+            var endpoint =  RegionEndpoint.EnumerableAllRegions.First(n => n.SystemName == GetDefaultRegionSystemName());
+            return new AWSRegionEndPoint(endpoint.SystemName, endpoint.DisplayName);
         }
     }
 }

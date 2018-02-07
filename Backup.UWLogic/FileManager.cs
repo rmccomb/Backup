@@ -19,22 +19,16 @@ using Amazon.SQS.Model;
 using Amazon.Glacier;
 using Amazon.Glacier.Model;
 using System.Web.Script.Serialization;
-using Windows.Storage;
 using System.Runtime.Serialization;
-using Windows.Storage.Streams;
+using Windows.Storage;
 
 namespace Backup.UWLogic
 {
     public class FileManager
     {
         // The name of the setting folder
-        public const string SettingsFolder = ".bbackup";
         public const string SettingsName = "backup.settings";
         public const string ArchiveFolder = "Archive"; // Default folder in the case of the user not setting one
-
-        // App.config settings keys
-        public const string TempDirKey = "tempDir"; // The location of SettingsFolder
-        // ...others as req.
 
         // Files for persistant data
         public const string DiscoveredFileName = "bbackup.disco.dat";
@@ -479,24 +473,24 @@ namespace Backup.UWLogic
                         Debug.WriteLine($"Downloaded job output to {topic.GetOutputFile()}");
                         if (topic.ArchiveId != null)
                             DownloadSuccess?.Invoke($"Glacier archive was downloaded to {topic.GetOutputFile()}");
-                        DeleteTopicAsync(topic);
+                        await DeleteTopicAsync(topic);
                         return GlacierResult.Completed;
                     }
                     else if (string.Equals(status, GlacierUtils.JOB_STATUS_FAILED, StringComparison.OrdinalIgnoreCase))
                     {
                         DownloadError?.Invoke("Job failed, cannot download the file");
-                        DeleteTopicAsync(topic);
+                        await DeleteTopicAsync(topic);
                         return GlacierResult.JobFailed;
                     }
                     else if (string.Equals(status, GlacierUtils.JOB_STATUS_INPROGRESS, StringComparison.OrdinalIgnoreCase))
                     {
                         DownloadWarning?.Invoke("Job in progress, Queue ARN: " + topic.QueueARN);
-                        DeleteTopicAsync(topic);
+                        await DeleteTopicAsync(topic);
                         return GlacierResult.JobInProgress;
                     }
                     else
                     {
-                        DeleteTopicAsync(topic);
+                        await DeleteTopicAsync(topic);
                         return GlacierResult.Error;
                     }
                 }
@@ -539,7 +533,7 @@ namespace Backup.UWLogic
 
                 // TODO Check expiry?
                 // Glacier ref: "A job ID will not expire for at least 24 hours after Amazon Glacier completes the job."
-                DeleteTopicAsync(topic);
+                await DeleteTopicAsync(topic);
                 BackupWarning?.Invoke("An AWS Glacier job has expired, a new job will be issued");
 
                 // Reissue expired job
@@ -548,7 +542,7 @@ namespace Backup.UWLogic
             }
             catch (Exception ex)
             {
-                DeleteTopicAsync(topic);
+                await DeleteTopicAsync(topic);
                 throw ex;
             }
         }
@@ -839,7 +833,7 @@ namespace Backup.UWLogic
             catch (Exception ex)
             {
                 DirectoryInfo info = new DirectoryInfo(path);
-                var att1 = info.Attributes.HasFlag(FileAttributes.Directory);
+                var att1 = info.Attributes.HasFlag(System.IO.FileAttributes.Directory);
 
                 Debug.WriteLine(ex.Message);
                 BackupError?.Invoke(ex.Message);
@@ -903,7 +897,7 @@ namespace Backup.UWLogic
                 var sources = GetSources();
                 var files = DiscoverFiles(sources);
                 SaveDiscoveredFiles(files);
-                CopyFiles();
+                CopyFilesAsync();
                 UpdateTimestamp(sources);
 
                 BackupCompleted?.Invoke();
@@ -924,7 +918,7 @@ namespace Backup.UWLogic
             {
                 BackupStarted?.Invoke();
 
-                CopyFiles();
+                CopyFilesAsync();
 
                 UpdateTimestamp(GetSources());
 
@@ -941,9 +935,9 @@ namespace Backup.UWLogic
         /// Do the backing up of the discovered files
         /// </summary>
         /// <param name="archiveDir">A directory to backup to</param>
-        static public void CopyFiles(string archiveDir = null)
+        static public async void CopyFilesAsync(string archiveDir = null)
         {
-            var settings = GetSettings();
+            var settings = await GetSettingsAsync();
             var tempDir = GetTempDirectory();
 
             var filesName = Path.Combine(tempDir, DiscoveredFileName);
@@ -972,7 +966,7 @@ namespace Backup.UWLogic
             // Upload the zip archive
             if (settings.IsS3BucketEnabled)
             {
-                UploadS3Archive(settings, fileSource.ZipFileArchive);
+                await UploadS3ArchiveAsync(settings, fileSource.ZipFileArchive);
 
                 BackupSuccess?.Invoke($"Backup uploaded to S3 Bucket {settings.AWSS3Bucket}");
 
@@ -985,7 +979,7 @@ namespace Backup.UWLogic
 
             if (settings.IsGlacierEnabled)
             {
-                UploadGlacierArchive(settings, fileSource.ZipFileArchive);
+                UploadGlacierArchiveAsync(settings, fileSource.ZipFileArchive);
 
                 BackupSuccess?.Invoke($"Backup uploaded to Glacier Vault {settings.AWSGlacierVault}");
 
@@ -1008,27 +1002,27 @@ namespace Backup.UWLogic
             }
         }
 
-        private static void UploadGlacierArchive(Settings settings, string zipArchivePath)
+        private static async void UploadGlacierArchiveAsync(Settings settings, string zipArchivePath)
         {
-            var manager = new ArchiveTransferManager(
+            var manager = new Amazon.Glacier.Transfer.ArchiveTransferManager(
                 settings.AWSAccessKeyID,
                 settings.AWSSecretAccessKey,
                 RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
-            var options = new UploadOptions();
+            var options = new Amazon.Glacier.Transfer.UploadOptions();
             options.StreamTransferProgress += FileManager.UploadGlacierProgress;
 
             var fi = new FileInfo(zipArchivePath);
 
             // Upload an archive.
-            string archiveId = manager.Upload(
+            var result = await manager.UploadAsync(
                 settings.AWSGlacierVault,
                 fi.Name,
                 zipArchivePath,
-                options).ArchiveId;
+                options);
 
             // TODO persist archive ID
-            Debug.WriteLine($"Archive ID: {archiveId}");
+            Debug.WriteLine($"Archive ID: {result.ArchiveId}");
         }
 
         private static void UploadGlacierProgress(object sender, StreamTransferProgressArgs e)
@@ -1036,7 +1030,7 @@ namespace Backup.UWLogic
             Debug.WriteLine($"Uploaded {e.PercentDone}");
         }
 
-        private static void UploadS3Archive(Settings settings, string zipPath)
+        private static async Task UploadS3ArchiveAsync(Settings settings, string zipPath)
         {
             var transferUtility = new TransferUtility(
                 settings.AWSAccessKeyID,
@@ -1044,9 +1038,9 @@ namespace Backup.UWLogic
                 RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
 
             // Create bucket if not found
-            if (!transferUtility.S3Client.DoesS3BucketExist(settings.AWSS3Bucket))
+            if (!transferUtility.S3Client.DoesS3BucketExistAsync(settings.AWSS3Bucket).Result)
             {
-                transferUtility.S3Client.PutBucket(
+                await transferUtility.S3Client.PutBucketAsync(
                     new PutBucketRequest() { BucketName = settings.AWSS3Bucket });
             }
 
@@ -1060,7 +1054,7 @@ namespace Backup.UWLogic
                     //StorageClass // TODO
                 };
                 request.UploadProgressEvent += Request_UploadProgressEvent;
-                transferUtility.Upload(request);
+                await transferUtility.UploadAsync(request);
             }
             catch (Exception ex)
             {
@@ -1097,7 +1091,7 @@ namespace Backup.UWLogic
                     {
                         var dest = Path.Combine(fileSource.UniqueArchiveDir, subpath.TrimStart('\\'));
                         File.Copy(filepath, dest, true);
-                        File.SetAttributes(dest, FileAttributes.Normal);
+                        File.SetAttributes(dest, System.IO.FileAttributes.Normal);
                     }
                     catch (UnauthorizedAccessException ex)
                     {
@@ -1143,7 +1137,7 @@ namespace Backup.UWLogic
 
         private static void DeleteZipSource(string zipSource)
         {
-            Thread.Sleep(250);
+            Task.Delay(250);
             DeleteFolderContents(zipSource);
         }
 

@@ -26,6 +26,17 @@ using System.Web.Script.Serialization;
 
 namespace Backup.Logic
 {
+    static public class TestStatic
+    {
+        static TestStatic()
+        {
+            Debug.WriteLine("in ctor");
+        }
+
+        static public void SomeMethod() { Debug.WriteLine("in SomeMethod"); }
+    }
+
+
     public class FileManager
     {
         // The name of the setting folder
@@ -272,7 +283,7 @@ namespace Backup.Logic
                 if (topic == null && updateIsDue)
                 {
                     // Issue new request and serialize topic details to global file
-                    topic = SetupTopicAndSubscriptions(InventoryTopicFileName, GetTempDirectory(), null, InventoryFileName);
+                    topic = SetupTopicAndSubscriptions(InventoryTopicFileName, GetTempDirectory(), settings.AWSGlacierRegion.SystemName, null, InventoryFileName);
                     topic.Type = "inventory-retrieval";
                     topic.Description = "This job is to download a vault inventory";
                     InitiateGlacierJob(topic);
@@ -326,7 +337,7 @@ namespace Backup.Logic
                 if (topic == null)
                 {
                     // Issue new request and serialize topic details to file
-                    topic = SetupTopicAndSubscriptions(topicFileName, downloadDirectory, archiveId, filename);
+                    topic = SetupTopicAndSubscriptions(topicFileName, downloadDirectory, GetSettings().AWSGlacierRegion.SystemName, archiveId, filename);
                     topic.Type = "archive-retrieval";
                     topic.Description = "This job is to download a vault archive";
                     topic.ArchiveId = archiveId;
@@ -623,7 +634,7 @@ namespace Backup.Logic
             using (var client = new AmazonGlacierClient(
                         settings.AWSAccessKeyID,
                         settings.AWSSecretAccessKey,
-                        RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName)))
+                        RegionEndpoint.GetBySystemName(settings.AWSGlacierRegion.SystemName)))
             {
                 var initJobRequest = new InitiateJobRequest
                 {
@@ -645,7 +656,7 @@ namespace Backup.Logic
             }
         }
 
-        private static Topic SetupTopicAndSubscriptions(string topicFileName, string outputDirectory, string archiveId = null, string filename = null)
+        private static Topic SetupTopicAndSubscriptions(string topicFileName, string outputDirectory, string regionSystemName, string archiveId = null, string filename = null)
         {
             var topic = new Topic {
                 TopicFileName = topicFileName,
@@ -661,12 +672,12 @@ namespace Backup.Logic
             var snsClient = new AmazonSimpleNotificationServiceClient(
                 settings.AWSAccessKeyID,
                 settings.AWSSecretAccessKey,
-                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+                RegionEndpoint.GetBySystemName(regionSystemName));
 
             var sqsClient = new AmazonSQSClient(
                 settings.AWSAccessKeyID,
                 settings.AWSSecretAccessKey,
-                RegionEndpoint.GetBySystemName(settings.AWSS3Region.SystemName));
+                RegionEndpoint.GetBySystemName(regionSystemName));
 
             var topicArn = snsClient.CreateTopic(new CreateTopicRequest { Name = "GlacierDownload-" + ticks }).TopicArn;
             //Debug.WriteLine($"topicArn: {topicArn}");

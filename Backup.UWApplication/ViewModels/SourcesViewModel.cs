@@ -14,7 +14,10 @@ namespace Backup.UWApplication.ViewModels
             //this._sources.Add(new Source("C:\\Temp", "*.cs", "Yes"));
             //this._sources.Add(new Source("C:\\XX\\Y", "*.txt", "No"));
 
-
+            foreach (var source in FileManager.GetSources())
+            {
+                this._sources.Add(source);
+            }
         }
 
         public ObservableCollection<Source> Sources { get => _sources; }

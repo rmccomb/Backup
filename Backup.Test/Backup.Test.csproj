@@ -73,7 +73,6 @@
     <Compile Include="AWSGlacierClient.cs" />
     <Compile Include="AWSS3ClientTest.cs" />
     <Compile Include="AWSVaultLowLevel.cs" />
-    <Compile Include="DownloadObject.cs" />
     <Compile Include="FilesTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

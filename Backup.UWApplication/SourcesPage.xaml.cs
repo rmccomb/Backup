@@ -23,6 +23,7 @@ namespace Backup.UWApplication
             this.InitializeComponent();
             this.ViewModel = new ViewModels.SourcesViewModel();
             Add.Click += new RoutedEventHandler(Add_ClickAsync);
+            Delete.Click += new RoutedEventHandler(Delete_ClickAsync);
         }
 
         public ViewModels.SourcesViewModel ViewModel { get; set; }
@@ -51,9 +52,8 @@ namespace Backup.UWApplication
 
             var folderPicker = new FolderPicker();
             folderPicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            //folderPicker.FileTypeFilter.Add(".docx");
-            //folderPicker.FileTypeFilter.Add(".xlsx");
-            //folderPicker.FileTypeFilter.Add(".pptx");
+
+            folderPicker.FileTypeFilter.Add(".txt");
             StorageFolder folder = await folderPicker.PickSingleFolderAsync();
             if (folder != null)
             {
@@ -67,9 +67,9 @@ namespace Backup.UWApplication
             }
         }
 
-        private void Delete_Click(object sender, RoutedEventArgs e)
+        private async void Delete_ClickAsync(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Delete");
+            await Task.Run(() => Debug.WriteLine("Delete"));
         }
     }
 }

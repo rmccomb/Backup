@@ -26,69 +26,90 @@ namespace Backup
 
         private void DestinationForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (this.HasChanges())
+            try
             {
-                var dlg = new MessageForm("Commit changes?", "Confirm Close");
-                var result = dlg.ShowDialog(this);
-                if (result == DialogResult.Yes)
+                if (this.HasChanges())
                 {
-                    SaveSettings();
-                    Close();
+                    var dlg = new MessageForm("Commit changes?", "Confirm Close");
+                    var result = dlg.ShowDialog(this);
+                    if (result == DialogResult.Yes)
+                    {
+                        SaveSettings();
+                        Close();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
         private void Browse_Click(object sender, EventArgs e)
         {
-            var result = this.folderBrowserDialog1.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
+                var result = this.folderBrowserDialog1.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    this.ArchivePath.Text = this.folderBrowserDialog1.SelectedPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
         private void PopulateControls()
         {
-            this.settings = FileManager.GetSettings();
+            try
+            {
+                this.settings = SettingsManager.GetSettings();
 
-            // File System
-            ArchivePath.Text = settings.FileSystemDirectory;
-            IsFileSystem.Checked = settings.IsFileSystemEnabled;
-            if (settings.IsFileSystemEnabled)
-                BrowseDirectory.Enabled = true;
-            else
-                BrowseDirectory.Enabled = false;
+                // File System
+                ArchivePath.Text = settings.FileSystemDirectory;
+                IsFileSystem.Checked = settings.IsFileSystemEnabled;
+                if (settings.IsFileSystemEnabled)
+                    BrowseDirectory.Enabled = true;
+                else
+                    BrowseDirectory.Enabled = false;
 
-            // S3 Bucket
-            S3BucketName.Text = settings.AWSS3Bucket;
-            IsS3Bucket.Checked = settings.IsS3BucketEnabled;
+                // S3 Bucket
+                S3BucketName.Text = settings.AWSS3Bucket;
+                IsS3Bucket.Checked = settings.IsS3BucketEnabled;
 
-            if (settings.AWSS3Region != null)
-                S3Region.SelectedValue = settings.AWSS3Region.SystemName;
-            else
-                GlacierRegion.SelectedValue = AWSHelper.GetDefaultRegionSystemName();
+                if (settings.AWSS3Region != null)
+                    S3Region.SelectedValue = settings.AWSS3Region.SystemName;
+                else
+                    S3Region.SelectedValue = AWSHelper.GetDefaultRegionSystemName();
 
-            if (S3BucketName.Text != string.Empty)
-                ListBucketContents.Enabled = true;
-            else
-                ListBucketContents.Enabled = false;
+                if (S3BucketName.Text != string.Empty)
+                    ListBucketContents.Enabled = true;
+                else
+                    ListBucketContents.Enabled = false;
 
-            // Glacier
-            GlacierVaultName.Text = settings.AWSGlacierVault;
-            IsGlacier.Checked = settings.IsGlacierEnabled;
+                // Glacier
+                GlacierVaultName.Text = settings.AWSGlacierVault;
+                IsGlacier.Checked = settings.IsGlacierEnabled;
 
-            if (settings.AWSGlacierRegion != null)
-                GlacierRegion.SelectedValue = settings.AWSGlacierRegion.SystemName;
-            else
-                GlacierRegion.SelectedValue = AWSHelper.GetDefaultRegionSystemName();
+                if (settings.AWSGlacierRegion != null)
+                    GlacierRegion.SelectedValue = settings.AWSGlacierRegion.SystemName;
+                else
+                    GlacierRegion.SelectedValue = AWSHelper.GetDefaultRegionSystemName();
 
-            if (GlacierVaultName.Text != string.Empty)
-                ListInventory.Enabled = true;
-            else
-                ListInventory.Enabled = false;
+                if (GlacierVaultName.Text != string.Empty)
+                    ListInventory.Enabled = true;
+                else
+                    ListInventory.Enabled = false;
 
-            _awsAccessKey = settings.AWSAccessKeyID;
-            _awsSecret = settings.AWSSecretAccessKey;
+                _awsAccessKey = settings.AWSAccessKeyID;
+                _awsSecret = settings.AWSSecretAccessKey;
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void IsFileSystem_CheckedChanged(object sender, EventArgs e)
@@ -163,65 +184,114 @@ namespace Backup
         {
             try
             {
-                this.SaveSettings();
-                this.settings = FileManager.GetSettings();
-                this.Close();
+                if (Validate(this.settings))
+                {
+                    this.SaveSettings();
+                    this.settings = SettingsManager.GetSettings();
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "An Error Occurred");
+                Program.DisplayError(ex);
             }
+        }
+
+        private bool Validate(Settings settings)
+        {
+            if (settings.IsFileSystemEnabled 
+                && (string.IsNullOrEmpty(settings.FileSystemDirectory.Trim())
+                || !System.IO.Directory.Exists(settings.FileSystemDirectory.Trim())))
+            {
+                MessageBox.Show("Folder must have a valid path", "Validation", MessageBoxButtons.OK);
+                return false;
+            }
+            if (settings.IsS3BucketEnabled
+                && string.IsNullOrEmpty(settings.AWSS3Bucket.Trim()))
+            {
+                MessageBox.Show("S3 Bucket Name must be valid", "Validation", MessageBoxButtons.OK);
+                return false;
+            }
+            if (settings.IsGlacierEnabled
+                && string.IsNullOrEmpty(settings.AWSGlacierVault.Trim()))
+            {
+                MessageBox.Show("Glacier Vault Name must be valid", "Validation", MessageBoxButtons.OK);
+                return false;
+            }
+
+            return true;
         }
 
         private void SaveSettings()
         {
-            this.settings = new Settings
-            {
-                FileSystemDirectory = this.ArchivePath.Text,
-                IsFileSystemEnabled = this.IsFileSystem.Checked,
+            //this.settings = SettingsBuilder.Create();
 
-                IsS3BucketEnabled = this.IsS3Bucket.Checked,
-                AWSS3Bucket = this.S3BucketName.Text,
-                AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem,
+            settings.FileSystemDirectory = this.ArchivePath.Text;
+            settings.IsFileSystemEnabled = this.IsFileSystem.Checked;
 
-                IsGlacierEnabled = this.IsGlacier.Checked,
-                AWSGlacierVault = this.GlacierVaultName.Text,
-                AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem,
+            settings.IsS3BucketEnabled = this.IsS3Bucket.Checked;
+            settings.AWSS3Bucket = this.S3BucketName.Text;
+            settings.AWSS3Region = (AWSRegionEndPoint)this.S3Region.SelectedItem;
 
-                AWSAccessKeyID = this._awsAccessKey,
-                AWSSecretAccessKey = this._awsSecret
-            };
-            FileManager.SaveSettings(this.settings);
+            settings.IsGlacierEnabled = this.IsGlacier.Checked;
+            settings.AWSGlacierVault = this.GlacierVaultName.Text;
+            settings.AWSGlacierRegion = (AWSRegionEndPoint)this.GlacierRegion.SelectedItem;
+
+            settings.AWSAccessKeyID = this._awsAccessKey;
+            settings.AWSSecretAccessKey = this._awsSecret;
+
+            SettingsManager.SaveSettings(this.settings);
         }
 
         private void ListBucketContents_Click(object sender, EventArgs e)
         {
-            this.SaveSettings();
-            var dlg = new BucketContentsForm
+            try
             {
-                Text = "S3 Bucket: " + this.settings.AWSS3Bucket
-            };
-            dlg.Show();
+                this.SaveSettings();
+                var dlg = new BucketContentsForm
+                {
+                    Text = "S3 Bucket: " + this.settings.AWSS3Bucket
+                };
+                dlg.Show();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void ListInventory_Click(object sender, EventArgs e)
         {
-            this.SaveSettings();
-            var dlg = new InventoryForm
+            try
             {
-                Text = "Vault: " + this.settings.AWSGlacierVault
-            };
-            dlg.ShowDialog();
+                this.SaveSettings();
+                var dlg = new InventoryForm
+                {
+                    Text = "Vault: " + this.settings.AWSGlacierVault
+                };
+                dlg.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void AWSCredentials_Click(object sender, EventArgs e)
         {
-            var dlg = new AWSCredentials(this._awsAccessKey);
-            var result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                this._awsAccessKey = dlg.AccessKey;
-                this._awsSecret = dlg.Secret;
+                var dlg = new AWSCredentials(this._awsAccessKey);
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    this._awsAccessKey = dlg.AccessKey;
+                    this._awsSecret = dlg.Secret;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 

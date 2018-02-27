@@ -49,24 +49,31 @@ namespace Backup
             var processIcon = new ProcessIcon();
             processIcon.Display();
 
-            var settings = FileManager.GetSettings();
-
-            // Run backup on start if configured
-            if (settings.CreateBackupOnStart)
-                FileManager.InvokeBackup();
-
-            // Update Glacier Inventory 
-            Debug.WriteLine(FileManager.GetGlacierInventory(settings));
-            if (settings.IsGlacierEnabled)
+            try
             {
-                try
+                var settings = SettingsManager.GetSettings();
+
+                // Run backup on start if configured
+                if (settings.CreateBackupOnStart)
+                    FileManager.InvokeBackup();
+
+                // Update Glacier Inventory 
+                Debug.WriteLine(FileManager.GetGlacierInventory(settings));
+                if (settings.IsGlacierEnabled)
                 {
-                    ProcessArchiveModelAsync();
+                    try
+                    {
+                        ProcessArchiveModelAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        processIcon.CreateNotifyError("An error occurred processing a Glacier job. " + ex.Message);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    processIcon.CreateNotifyError("An error occurred processing a Glacier job. " + ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
 
             Application.Run();
@@ -78,7 +85,7 @@ namespace Backup
 
             //if (DialogResult.Yes == MessageBox.Show(ProgramName, "Do you want to run a backup before logging off?", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             if((e.Reason == SessionEndReasons.Logoff || e.Reason == SessionEndReasons.SystemShutdown)
-                && FileManager.GetSettings().IsBackupOnLogoff)
+                && SettingsManager.GetSettings().IsBackupOnLogoff)
             {
                 FileManager.InvokeBackup();
                 //e.Cancel = true;
@@ -139,26 +146,9 @@ namespace Backup
 
         //} //WndProc   
 
-        //private void Form1_Closing(
-        //    System.Object sender,
-        //    System.ComponentModel.CancelEventArgs e)
-        //{
-        //    if (systemShutdown)
-        //    // Reset the variable because the user might cancel the   
-        //    // shutdown.  
-        //    {
-        //        systemShutdown = false;
-        //        if (DialogResult.Yes == MessageBox.Show("My application",
-        //            "Do you want to save your work before logging off?",
-        //            MessageBoxButtons.YesNo))
-        //        {
-        //            e.Cancel = true;
-        //        }
-        //        else
-        //        {
-        //            e.Cancel = false;
-        //        }
-        //    }
-        //}
+        public static void DisplayError(Exception ex)
+        {
+            MessageBox.Show(ex.Message, Program.ProgramName + " Error", MessageBoxButtons.OK);
+        }
     }
 }

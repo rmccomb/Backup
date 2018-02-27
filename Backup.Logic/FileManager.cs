@@ -39,9 +39,8 @@ namespace Backup.Logic
 
     public class FileManager
     {
-        // The name of the setting folder
-        public const string SettingsFolder = ".bbackup";
-        public const string SettingsName = "bbackup.settings.bin";
+        public const string SettingsFolder = ".backup";
+        public const string SettingsName = "backup.settings.bin";
         public const string ArchiveFolder = "Archive"; // Default folder in the case of the user not setting one
 
         // App.config settings keys
@@ -49,17 +48,14 @@ namespace Backup.Logic
         // ...others as req.
 
         // Files for persistant data
-        public const string DiscoveredFileName = "bbackup.disco.dat";
-        public const string ProcessingFileName = "bbackup.processing.dat";
-        public const string CatalogFileName = "bbackup.catalog.dat";
-        public const string DestinationsFileName = "bbackup.destinations.dat";
+        public const string DiscoveredFileName = "disc.dat";
         public const string InventoryFileName = "glacier.inventory.json";
         public const string InventoryTopicFileName = "glacier.inventory.topic";
         public const string ArchiveTopicFileName = "glacier.archive_#.topic";
-        public const string InventoryModelFileName = "bback.inventory.model";
+        public const string InventoryModelFileName = "back.inventory.model";
 
         // The list of target directories
-        public const string SourcesFileName = "bbackup.sources.dat";
+        public const string SourcesFileName = "backup.sources.dat";
 
         #region events
         public static event BackupStartedHandler BackupStarted;
@@ -127,30 +123,6 @@ namespace Backup.Logic
             return tempDir;
         }
 
-        public static void SaveSettings(Settings settings)
-        {
-            Debug.WriteLine("SaveSettings");
-
-            var formatter = new BinaryFormatter();
-            var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
-            File.Delete(settingsFileName);
-            var stream = new FileStream(settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
-            formatter.Serialize(stream, settings);
-            stream.Close();
-        }
-
-        public static Settings GetSettings()
-        {
-            var formatter = new BinaryFormatter();
-            var settingsFileName = Path.Combine(GetTempDirectory(), SettingsName);
-            if (!File.Exists(settingsFileName))
-                SaveSettings(new Settings());
-            var stream = new FileStream(settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-            var settings = (Settings)formatter.Deserialize(stream);
-            stream.Close();
-            return settings;
-        }
-
         public static Topic GetExistingTopic(string topicName)
         {
             var file = Path.Combine(GetTempDirectory(), topicName);
@@ -205,7 +177,7 @@ namespace Backup.Logic
         /// </summary>
         static public async Task<IEnumerable<string>> GetBucketContentsAsync()
         {
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
 
             AmazonS3Client client = new AmazonS3Client(
                 settings.AWSAccessKeyID, 
@@ -226,7 +198,7 @@ namespace Backup.Logic
         {
             try
             {
-                var settings = GetSettings();
+                var settings = SettingsManager.GetSettings();
                 var downloadInfo = new DownloadObjectInfo { DownloadDirectory = downloadDir, ObjectKey = objectKey };
                 AmazonS3Client client = new AmazonS3Client(
                     settings.AWSAccessKeyID,
@@ -288,7 +260,7 @@ namespace Backup.Logic
                     topic.Description = "This job is to download a vault inventory";
                     InitiateGlacierJob(topic);
                     settings.InventoryUpdateRequested = DateTime.Now;
-                    SaveSettings(settings);
+                    SettingsManager.SaveSettings(settings);
                     return topic.Status; // only requested - no need to process yet
                 }
                 if (!updateIsDue)
@@ -337,7 +309,7 @@ namespace Backup.Logic
                 if (topic == null)
                 {
                     // Issue new request and serialize topic details to file
-                    topic = SetupTopicAndSubscriptions(topicFileName, downloadDirectory, GetSettings().AWSGlacierRegion.SystemName, archiveId, filename);
+                    topic = SetupTopicAndSubscriptions(topicFileName, downloadDirectory, SettingsManager.GetSettings().AWSGlacierRegion.SystemName, archiveId, filename);
                     topic.Type = "archive-retrieval";
                     topic.Description = "This job is to download a vault archive";
                     topic.ArchiveId = archiveId;
@@ -455,7 +427,7 @@ namespace Backup.Logic
             // Check for notifications on topic and process any message
             try
             {
-                var settings = GetSettings();
+                var settings = SettingsManager.GetSettings();
                 using (var client = new AmazonGlacierClient(
                             settings.AWSAccessKeyID,
                             settings.AWSSecretAccessKey,
@@ -555,7 +527,7 @@ namespace Backup.Logic
 
         private static void DeleteTopic(Topic topic)
         {
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
             var snsClient = new AmazonSimpleNotificationServiceClient(
                 settings.AWSAccessKeyID,
                 settings.AWSSecretAccessKey,
@@ -630,7 +602,7 @@ namespace Backup.Logic
         private static void InitiateGlacierJob(Topic topic)
         {
             // Make the call to AWS Glacier to get inventory
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
             using (var client = new AmazonGlacierClient(
                         settings.AWSAccessKeyID,
                         settings.AWSSecretAccessKey,
@@ -666,7 +638,7 @@ namespace Backup.Logic
                 DateRequested = DateTime.Now
             };
             long ticks = DateTime.Now.Ticks;
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
 
             #region Setup SNS topic
             var snsClient = new AmazonSimpleNotificationServiceClient(
@@ -771,7 +743,7 @@ namespace Backup.Logic
             List<Source> sources,
             string tempDir = null)
         {
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
             var files = new List<FileDetail>();
 
             sources.ForEach(s =>
@@ -944,7 +916,7 @@ namespace Backup.Logic
         /// <param name="archiveDir">A directory to backup to</param>
         static public void CopyFiles(string archiveDir = null)
         {
-            var settings = GetSettings();
+            var settings = SettingsManager.GetSettings();
             var tempDir = GetTempDirectory();
 
             var filesName = Path.Combine(tempDir, DiscoveredFileName);

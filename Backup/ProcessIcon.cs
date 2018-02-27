@@ -125,7 +125,7 @@ namespace Backup
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                MessageBox.Show(ex.Message, Program.ProgramName + " Error");
+                Program.DisplayError(ex);
             }
         }
 

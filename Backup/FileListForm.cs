@@ -41,7 +41,7 @@ namespace Backup
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                Program.DisplayError(ex);
             }
         }
 
@@ -77,7 +77,7 @@ namespace Backup
             }
             catch (Exception ex)
             {
-                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
+                Program.DisplayError(ex);
             }
         }
 
@@ -120,7 +120,7 @@ namespace Backup
             }
             catch (Exception ex)
             {
-                MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK);
+                Program.DisplayError(ex);
             }
         }
 

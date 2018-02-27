@@ -20,7 +20,14 @@ namespace Backup
 
         private void ConfigureForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveSettings();
+            try
+            {
+                SaveSettings();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         public void PopulateControls()
@@ -39,7 +46,7 @@ namespace Backup
             }
             Sources.EndUpdate();
 
-            var settings = FileManager.GetSettings();
+            var settings = SettingsManager.GetSettings();
             //this.CreateOnStart.Checked = settings.CreateBackupOnStart;
             this.IsBackupOnLogoff.Checked = settings.IsBackupOnLogoff;
             //this.LaunchOnLogon.Checked = settings.IsLaunchOnLogon;
@@ -47,21 +54,28 @@ namespace Backup
 
         private void Edit_Click(object sender, EventArgs e)
         {
-            var item = this.Sources.SelectedItems[0];
-            var editSource = new EditSource(item);
-            var result = editSource.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                var vals = editSource.GetValues();
-                var idx = Sources.Items.IndexOf(item);
-                //Sources.Items[idx].Text = vals.Item1;
-                Sources.Items[idx].SubItems[0].Text = vals.Item1;
-                Sources.Items[idx].SubItems[1].Text = vals.Item2;
-                Sources.Items[idx].SubItems[2].Text = vals.Item3;
-                // Not setting date here
+                var item = this.Sources.SelectedItems[0];
+                var editSource = new EditSource(item);
+                var result = editSource.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    var vals = editSource.GetValues();
+                    var idx = Sources.Items.IndexOf(item);
+                    //Sources.Items[idx].Text = vals.Item1;
+                    Sources.Items[idx].SubItems[0].Text = vals.Item1;
+                    Sources.Items[idx].SubItems[1].Text = vals.Item2;
+                    Sources.Items[idx].SubItems[2].Text = vals.Item3;
+                    // Not setting date here
 
-                SaveSources();
-                PopulateControls();
+                    SaveSources();
+                    PopulateControls();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
@@ -86,21 +100,28 @@ namespace Backup
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "An Error Occurred");
+                Program.DisplayError(ex);
             }
         }
 
         private void Sources_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (Sources.SelectedItems != null && Sources.SelectedItems.Count > 0)
+            try
             {
-                this.Edit.Enabled = true;
-                this.Delete.Enabled = true;
+                if (Sources.SelectedItems != null && Sources.SelectedItems.Count > 0)
+                {
+                    this.Edit.Enabled = true;
+                    this.Delete.Enabled = true;
+                }
+                else
+                {
+                    this.Edit.Enabled = false;
+                    this.Delete.Enabled = false;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                this.Edit.Enabled = false;
-                this.Delete.Enabled = false;
+                Program.DisplayError(ex);
             }
         }
 
@@ -117,43 +138,70 @@ namespace Backup
 
         private void Discover_Click(object sender, EventArgs e)
         {
-            if (this.fileListForm == null)
+            try
             {
-                this.fileListForm = new FileListForm();
-                this.fileListForm.FormClosed += FileList_FormClosed;
-                this.fileListForm.ShowDialog();
+                if (this.fileListForm == null)
+                {
+                    this.fileListForm = new FileListForm();
+                    this.fileListForm.FormClosed += FileList_FormClosed;
+                    this.fileListForm.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
         private void FileList_FormClosed(object sender, FormClosedEventArgs e)
         {
-            this.fileListForm = null;
-            this.PopulateControls();
+            try
+            {
+                this.fileListForm = null;
+                this.PopulateControls();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void Close_Click(object sender, EventArgs e)
         {
-            SaveSettings();
-
-            this.Close();
+            try
+            {
+                SaveSettings();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void SaveSettings()
         {
-            var settings = FileManager.GetSettings();
+            var settings = SettingsManager.GetSettings();
             settings.IsBackupOnLogoff = this.IsBackupOnLogoff.Checked;
             //settings.CreateBackupOnStart = this.CreateOnStart.Checked;
             //settings.IsLaunchOnLogon = this.LaunchOnLogon.Checked;
-            FileManager.SaveSettings(settings);
+            SettingsManager.SaveSettings(settings);
         }
 
         private void BackupDestination_Click(object sender, EventArgs e)
         {
-            if (this.destForm == null)
+            try
             {
-                this.destForm = new DestinationForm();
-                this.destForm.FormClosed += DestForm_FormClosed;
-                this.destForm.ShowDialog();
+                if (this.destForm == null)
+                {
+                    this.destForm = new DestinationForm();
+                    this.destForm.FormClosed += DestForm_FormClosed;
+                    this.destForm.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
@@ -164,16 +212,23 @@ namespace Backup
 
         private void AddDirectory_Click(object sender, EventArgs e)
         {
-            var editSource = new EditSource();
-            var result = editSource.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                var vals = editSource.GetValues();
-                Sources.Items.Add(
-                    new ListViewItem(new string[] { vals.Item1, vals.Item2, vals.Item3, Source.NeverText }));
-            }
+                var editSource = new EditSource();
+                var result = editSource.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    var vals = editSource.GetValues();
+                    Sources.Items.Add(
+                        new ListViewItem(new string[] { vals.Item1, vals.Item2, vals.Item3, Source.NeverText }));
+                }
 
-            SaveSources();
+                SaveSources();
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
+            }
         }
 
         private void LaunchOnLogon_Click(object sender, EventArgs e)

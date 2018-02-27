@@ -41,7 +41,7 @@ namespace Backup.UWLogic
         public const string InventoryModelFileName = "bback.inventory.model";
 
         // The list of target directories
-        public const string SourcesFileName = "bbackup.sources.dat";
+        public const string SourcesFileName = "sources.dat";
 
         #region events
         public static event BackupStartedHandler BackupStarted;

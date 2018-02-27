@@ -26,7 +26,7 @@ namespace Backup.UWApplication
         List<Scenario> scenarios = new List<Scenario>
         {
             new Scenario { Title="Sources", ClassType=typeof(SourcesPage)},
-            //new Scenario { Title="S3 Config", ClassType=typeof(S3ConfigPage) }
+            new Scenario { Title="S3 Config", ClassType=typeof(S3ConfigPage) }
         };
 
         public static MainPage Current;

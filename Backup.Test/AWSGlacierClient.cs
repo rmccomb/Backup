@@ -38,7 +38,7 @@ namespace Backup.Test
         public void DownloadGlacier()
         {
             var archiveId = "SOUSY3B601HbkJSiFdrzvE3CUDHuLHaoxbKwbIiSIdIuQTjcTw_XXm0i38HGLaJhubxRrTdvY-5UjYsSLWK0PVMcG5Mf9LKd9oBPAuwNIzGGhZmZ7zF9DaQU6lDuPh2C_4ViIc5dlw";
-            var settings = FileManager.GetSettings();
+            var settings = SettingsManager.GetSettings();
             var downloadFilePath = @"C:\Users\Rob\source\repos\Backup\archive\glacier.zip";
             try
             {
@@ -73,7 +73,7 @@ namespace Backup.Test
         [TestMethod]
         public void DescribeVault()
         {
-            var settings = FileManager.GetSettings();
+            var settings = SettingsManager.GetSettings();
             DescribeVaultRequest describeVaultRequest = new DescribeVaultRequest()
             {
                 VaultName = settings.AWSGlacierVault
@@ -99,7 +99,7 @@ namespace Backup.Test
         public void GetVaultsList()
         {
             string lastMarker = null;
-            var settings = FileManager.GetSettings();
+            var settings = SettingsManager.GetSettings();
             DescribeVaultRequest describeVaultRequest = new DescribeVaultRequest()
             {
                 VaultName = settings.AWSGlacierVault
@@ -168,7 +168,7 @@ namespace Backup.Test
             // Check for notifications on topic and process any message
             try
             {
-                var settings = FileManager.GetSettings();
+                var settings = SettingsManager.GetSettings();
                 using (var client = new AmazonGlacierClient(
                             settings.AWSAccessKeyID,
                             settings.AWSSecretAccessKey,

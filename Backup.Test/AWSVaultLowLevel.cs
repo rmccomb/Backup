@@ -76,7 +76,7 @@ namespace Backup.Test
             [TestInitialize]
             public void Init()
             {
-                settings = FileManager.GetSettings();
+                settings = SettingsManager.GetSettings();
                 vaultName = settings.AWSGlacierVault;
                 fileName = @"C:\Users\Rob\source\repos\Backup\archive\inventory.json";
             }

@@ -60,11 +60,18 @@ namespace Backup
 
         private void Archive_Click(object sender, EventArgs e)
         {
-            if (this.destinationForm == null)
+            try
             {
-                this.destinationForm = new DestinationForm();
-                this.destinationForm.FormClosed += Destination_FormClosed;
-                this.destinationForm.ShowDialog();
+                if (this.destinationForm == null)
+                {
+                    this.destinationForm = new DestinationForm();
+                    this.destinationForm.FormClosed += Destination_FormClosed;
+                    this.destinationForm.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
@@ -75,11 +82,18 @@ namespace Backup
 
         private void Configure_Click(object sender, EventArgs e)
         {
-            if (this.configForm == null)
+            try
             {
-                this.configForm = new ConfigureForm();
-                this.configForm.FormClosed += Config_FormClosed;
-                this.configForm.ShowDialog();
+                if (this.configForm == null)
+                {
+                    this.configForm = new ConfigureForm();
+                    this.configForm.FormClosed += Config_FormClosed;
+                    this.configForm.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 
@@ -96,17 +110,24 @@ namespace Backup
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "An Error Occurred");
+                Program.DisplayError(ex);
             }
         }
 
         private void Discover_Click(object sender, EventArgs e)
         {
-            if (this.fileListForm == null)
+            try
             {
-                this.fileListForm = new FileListForm();
-                this.fileListForm.FormClosed += FileList_FormClosed;
-                this.fileListForm.ShowDialog();
+                if (this.fileListForm == null)
+                {
+                    this.fileListForm = new FileListForm();
+                    this.fileListForm.FormClosed += FileList_FormClosed;
+                    this.fileListForm.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 

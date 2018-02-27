@@ -17,11 +17,18 @@ namespace Backup
 
         private void AddAWSSecret_Click(object sender, EventArgs e)
         {
-            var dlg = new EditSecret();
-            var result = dlg.ShowDialog();
-            if (result == DialogResult.OK)
+            try
             {
-                this.Secret = dlg.Secret;
+                var dlg = new EditSecret();
+                var result = dlg.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    this.Secret = dlg.Secret;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.DisplayError(ex);
             }
         }
 

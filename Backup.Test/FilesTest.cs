@@ -52,9 +52,9 @@ namespace Backup.Test
                 AWSS3Bucket = "backup.tiz.digital",
                 CreateBackupOnStart = true
             };
-            FileManager.SaveSettings(settings);
+            SettingsManager.SaveSettings(settings);
 
-            var loaded = FileManager.GetSettings();
+            var loaded = SettingsManager.GetSettings();
             Assert.AreEqual(loaded.FileSystemDirectory, settings.FileSystemDirectory);
             Assert.AreEqual(loaded.AWSAccessKeyID, settings.AWSAccessKeyID);
             Assert.AreEqual(loaded.AWSSecretAccessKey, settings.AWSSecretAccessKey);
